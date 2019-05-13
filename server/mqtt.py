@@ -10,7 +10,7 @@ import random
 	
 def temp_callback(client, userdata, message):
         msg = str(message.payload.decode("utf-8"))
-        print("Received a msg \n")
+        print("Received a msg at " + time.asctime( time.localtime(time.time()) ) )
         print("message received " , msg)
         print(msg.split(' , '))
         parsed = re.findall(r"[-+]?\d*\.\d+|\d+", msg)
