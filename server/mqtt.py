@@ -31,6 +31,7 @@ def temp_callback(client, userdata, message):
         n = len(split_msg)
         for i in range(0, n):
                 row.append(float(split_msg[i]))
+                
 
         f = open(filename, 'a')
         writer = csv.writer(f)

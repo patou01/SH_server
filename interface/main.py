@@ -1,7 +1,7 @@
 # # This Python file uses the following encoding: utf-8
 from __future__ import unicode_literals
 import sys
-import random
+
 import os
 import csv
 import datetime
@@ -13,6 +13,7 @@ from mainwindow import Ui_MainWindow
 
 
 from numpy import arange, sin, pi
+import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.dates as mdates
@@ -63,16 +64,24 @@ class default_plot(FigureCanvas):
 
     def update_figure(self, x,y):
         # Build a list of 4 random integers between 0 and 10 (both inclusive)
+
+        t = self.axes.get_title()
         self.axes.cla()
+        self.axes.locator_params(axis='y', nbins=6)
+        self.axes.locator_params(axis='x', nbins=6)
         self.axes.plot(x, y, 'r')
         self.axes.format_xdata = mdates.DateFormatter('%h')
         self.axes.fmt_xdata = mdates.DateFormatter('%h')
         self.axes.set_xlim(x[0], x[-1])
-        print(type(self.axes))
-        self.fig.autofmt_xdate()
+        self.axes.locator_params(axis='y', nbins=6)
+        self.axes.locator_params(axis='x', nbins=6)
 
+        self.fig.autofmt_xdate()
+        self.axes.set_title(t)
         self.draw()
 
+    def setTitle(self, title):
+        self.axes.set_title(title)
 
 
 class MainWindow(QMainWindow):
@@ -83,22 +92,11 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         self.ui.LogButton.clicked.connect(self.logButtonPress)
 
-        self.time = []
-        self.T_dht = []
-        self.H_dht = []
-        self.co2 = []
-        self.tvoc = []
-        self.T_hdc = []
-        self.H_hdc = []
-        self.lux = []
+        self.clear_plot_data()
+
+
 
     #def resizeEvent(self, event):
-     #   x = [0, 1, 2, 3]
-     #   y = [random.randint(0, 10) for i in range(4)]
-     #   w.ui.plot1.update_figure(x, y)
-     #   w.ui.plot2.update_figure(x, y)
-     #   w.ui.plot3.update_figure(x, y)
-     #   w.ui.plot4.update_figure(x, y)
 
     def logButtonPress(self):
         # let user look up a file, show only the csv files.
@@ -154,22 +152,27 @@ class MainWindow(QMainWindow):
             print("started reading csv")
             for row in csv_reader:
                 if (row != []):
+                    if(float(row[TEMP_DHT_INDEX]) < 120):
                     #    print(row)
                  #   print(type(row[TIME_INDEX]))
-                    self.time.append(mdates.epoch2num(float(row[TIME_INDEX])))
-                    self.T_dht.append(row[TEMP_DHT_INDEX])
-                    self.H_dht.append(row[HUM_DHT_INDEX])
-                    self.co2.append(row[CO2_INDEX])
-                    self.tvoc.append(row[TVOC_INDEX])
-                    self.T_hdc.append(row[TEMP_HDC_INDEX])
-                    self.H_hdc.append(row[HUM_HDC_INDEX])
-                    self.lux.append(row[LUX_INDEX])
+                        self.time.append(mdates.epoch2num(float(row[TIME_INDEX])))
+                        self.T_dht.append(float(row[TEMP_DHT_INDEX]))
+                        self.H_dht.append(float(row[HUM_DHT_INDEX]))
+                        self.co2.append(float(row[CO2_INDEX]))
+                        self.tvoc.append(float(row[TVOC_INDEX]))
+                        self.T_hdc.append(float(row[TEMP_HDC_INDEX]))
+                        self.H_hdc.append(float(row[HUM_HDC_INDEX]))
+                        self.lux.append(float(row[LUX_INDEX]))
 
             print("read csv")
-            print(self.time)
 
-            print(mdates.num2date(self.time))
             self.time = mdates.num2date(self.time)
+            self.T_dht = np.array(self.T_dht)
+            self.co2 = np.array(self.co2)
+            self.tvoc = np.array(self.tvoc)
+            self.lux = np.array(self.lux)
+            print(len(self.time))
+
             self.ui.plot1.update_figure(self.time, self.T_dht)
             self.ui.plot2.update_figure(self.time, self.co2)
             self.ui.plot3.update_figure(self.time, self.tvoc)
@@ -185,6 +188,11 @@ if __name__ == '__main__':
     w.ui.plot2 = default_plot(w.ui.plot2)
     w.ui.plot3 = default_plot(w.ui.plot3)
     w.ui.plot4 = default_plot(w.ui.plot4)
+    w.ui.plot1.setTitle("temp")
+    w.ui.plot2.setTitle("co2")
+    w.ui.plot3.setTitle("tvoc")
+    w.ui.plot4.setTitle("lux")
+
 
 
     w.show()
