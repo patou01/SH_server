@@ -44,7 +44,7 @@ class default_plot(FigureCanvas):
         self.fig = Figure(figsize=(parent.geometry().width()/dpi, parent.geometry().height()/dpi), dpi=dpi)
         FigureCanvas.__init__(self, self.fig)
         self.axes = self.fig.add_subplot(111)
-        self.compute_initial_figure()
+        self.reset_plot()
         self.setParent(parent)
         FigureCanvas.setSizePolicy(self,
                                    QtWidgets.QSizePolicy.Expanding,
@@ -57,10 +57,12 @@ class default_plot(FigureCanvas):
 
         print("done init")
 
-    def compute_initial_figure(self):
+    def reset_plot(self):
+        self.axes.cla()
         t = arange(0.0, 3.0, 0.01)
         s = sin(2 * pi * t)
-        self.axes.plot(t, s)
+    #    self.axes.plot(t, s)
+        self.draw()
 
     def update_figure(self, x,y):
         # Build a list of 4 random integers between 0 and 10 (both inclusive)
@@ -91,24 +93,29 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.LogButton.clicked.connect(self.logButtonPress)
-
+        self.ui.logComboBox.activated.connect(self.logComboChanged)
         self.clear_plot_data()
 
 
 
     #def resizeEvent(self, event):
 
+    def logComboChanged(self):
+
+        self.logFile = self.logDirectory + "\\" + self.ui.logComboBox.currentText() + ".csv"
+        self.load_file(self.logFile)
+
     def logButtonPress(self):
         # let user look up a file, show only the csv files.
         filter = "CSV files (*.csv)"
         t, _ = QFileDialog.getOpenFileName(self, "Select File", "", filter)
-        logFile = str(t)
+        self.logFile = str(t)
         #print("log file:" + t)
 
-        logDirectory = os.path.dirname(os.path.abspath(logFile))
+        self.logDirectory = os.path.dirname(os.path.abspath(self.logFile))
         #print(logDirectory)
         fileList = []
-        for file in os.listdir(logDirectory):
+        for file in os.listdir(self.logDirectory):
            if file.endswith(".csv"):
               fileList.append(file)
         #      print(os.path.join(logDirectory, file))
@@ -124,7 +131,7 @@ class MainWindow(QMainWindow):
         self.ui.logComboBox.addItems(names)
 
         #need to make the selected name match the clicked file
-        splitFile = logFile.split("/")
+        splitFile = self.logFile.split("/")
         activeFile = splitFile[len(splitFile)-1]
         activeFile = activeFile[0:-4]
 
@@ -132,7 +139,7 @@ class MainWindow(QMainWindow):
         self.ui.logComboBox.setCurrentText(activeFile)
 
         print(activeFile)
-        self.load_file(logFile)
+        self.load_file(self.logFile)
 
     def clear_plot_data(self):
         self.time = []
@@ -144,17 +151,23 @@ class MainWindow(QMainWindow):
         self.H_hdc = []
         self.lux = []
 
+    def clear_plots(self):
+        self.ui.plot1.reset_plot()
+        self.ui.plot2.reset_plot()
+        self.ui.plot3.reset_plot()
+        self.ui.plot4.reset_plot()
+
     def load_file(self, File):
+        print("trying to read " + File)
         self.clear_plot_data()
+        self.clear_plots()
         with open(File) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             line_count = 0
             print("started reading csv")
             for row in csv_reader:
                 if (row != []):
-                    if(float(row[TEMP_DHT_INDEX]) < 120):
-                    #    print(row)
-                 #   print(type(row[TIME_INDEX]))
+                    if(float(row[TEMP_DHT_INDEX]) < 120): # kind of a hack filter, the temperature data reads 200 if the sensor fails, and skipping a line every now and then is no big deal.
                         self.time.append(mdates.epoch2num(float(row[TIME_INDEX])))
                         self.T_dht.append(float(row[TEMP_DHT_INDEX]))
                         self.H_dht.append(float(row[HUM_DHT_INDEX]))
@@ -173,10 +186,11 @@ class MainWindow(QMainWindow):
             self.lux = np.array(self.lux)
             print(len(self.time))
 
-            self.ui.plot1.update_figure(self.time, self.T_dht)
-            self.ui.plot2.update_figure(self.time, self.co2)
-            self.ui.plot3.update_figure(self.time, self.tvoc)
-            self.ui.plot4.update_figure(self.time, self.lux)
+            if(len(self.time) > 1):
+                self.ui.plot1.update_figure(self.time, self.T_dht)
+                self.ui.plot2.update_figure(self.time, self.co2)
+                self.ui.plot3.update_figure(self.time, self.tvoc)
+                self.ui.plot4.update_figure(self.time, self.lux)
 
 
 
