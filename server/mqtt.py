@@ -36,7 +36,7 @@ def temp_callback(client, userdata, message):
         f = open(filename, 'a')
         writer = csv.writer(f)
         writer.writerow(row)
-        print("wrote row ")
+        print("wrote row " + row + " at " + time.asctime( time.localtime(time.time())) + " to file " + filename)
         f.close()
 
 
