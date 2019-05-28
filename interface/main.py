@@ -6,7 +6,7 @@ import os
 import csv
 import datetime
 
-from PyQt5 import  QtWidgets
+from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QComboBox
 
 from PyQt5.QtCore import QDateTime
@@ -34,98 +34,7 @@ TVOC_INDEX = 4
 TEMP_HDC_INDEX = 5
 HUM_HDC_INDEX = 6
 LUX_INDEX = 7
-
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-import sys
-
-
-MAXVAL = 650000
-
-class RangeSliderClass(QtWidgets.QWidget):
-
-    def __init__(self):
-        super().__init__()
-
-        self.minTime = 0
-        self.maxTime = 0
-        self.minRangeTime = 0
-        self.maxRangeTime = 0
-
-        self.sliderMin = MAXVAL
-        self.sliderMax = MAXVAL
-
-        self.setupUi(self)
-
-    def setupUi(self, RangeSlider):
-        RangeSlider.setObjectName("RangeSlider")
-        RangeSlider.resize(1000, 65)
-        RangeSlider.setMaximumSize(QtCore.QSize(16777215, 65))
-        self.RangeBarVLayout = QtWidgets.QVBoxLayout(RangeSlider)
-        self.RangeBarVLayout.setContentsMargins(5, 0, 5, 0)
-        self.RangeBarVLayout.setSpacing(0)
-        self.RangeBarVLayout.setObjectName("RangeBarVLayout")
-
-        self.slidersFrame = QtWidgets.QFrame(RangeSlider)
-        self.slidersFrame.setMaximumSize(QtCore.QSize(16777215, 25))
-        self.slidersFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.slidersFrame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.slidersFrame.setObjectName("slidersFrame")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.slidersFrame)
-        self.horizontalLayout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
-        self.horizontalLayout.setContentsMargins(5, 2, 5, 2)
-        self.horizontalLayout.setSpacing(0)
-        self.horizontalLayout.setObjectName("horizontalLayout")
-
-        ## Start Slider Widget
-        self.startSlider = QtWidgets.QSlider(self.slidersFrame)
-        self.startSlider.setMaximum(self.sliderMin)
-        self.startSlider.setMinimumSize(QtCore.QSize(100, 5))
-        self.startSlider.setMaximumSize(QtCore.QSize(16777215, 10))
-
-        font = QtGui.QFont()
-        font.setKerning(True)
-
-        self.startSlider.setFont(font)
-        self.startSlider.setAcceptDrops(False)
-        self.startSlider.setAutoFillBackground(False)
-        self.startSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.startSlider.setInvertedAppearance(True)
-        self.startSlider.setObjectName("startSlider")
-        self.startSlider.setValue(MAXVAL)
-        self.startSlider.valueChanged.connect(self.handleStartSliderValueChange)
-        self.horizontalLayout.addWidget(self.startSlider)
-
-        ## End Slider Widget
-        self.endSlider = QtWidgets.QSlider(self.slidersFrame)
-        self.endSlider.setMaximum(MAXVAL)
-        self.endSlider.setMinimumSize(QtCore.QSize(100, 5))
-        self.endSlider.setMaximumSize(QtCore.QSize(16777215, 10))
-        self.endSlider.setTracking(True)
-        self.endSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.endSlider.setObjectName("endSlider")
-        self.endSlider.setValue(self.sliderMax)
-        self.endSlider.valueChanged.connect(self.handleEndSliderValueChange)
-
-        #self.endSlider.sliderReleased.connect(self.handleEndSliderValueChange)
-
-        self.horizontalLayout.addWidget(self.endSlider)
-
-        self.RangeBarVLayout.addWidget(self.slidersFrame)
-
-        #self.retranslateUi(RangeSlider)
-        QtCore.QMetaObject.connectSlotsByName(RangeSlider)
-
-        self.show()
-
-    @QtCore.pyqtSlot(int)
-    def handleStartSliderValueChange(self, value):
-        self.startSlider.setValue(value)
-
-    @QtCore.pyqtSlot(int)
-    def handleEndSliderValueChange(self, value):
-        self.endSlider.setValue(value)
-
+REPLOT_DELTA_TIME = 60 # minutes
 
 
 
@@ -137,6 +46,7 @@ class default_plot(FigureCanvas):
         self.fig = Figure(figsize=(parent.geometry().width()/dpi, parent.geometry().height()/dpi), dpi=dpi)
         FigureCanvas.__init__(self, self.fig)
         self.axes = self.fig.add_subplot(111)
+        self.title = ''
         self.reset_plot()
         self.setParent(parent)
         FigureCanvas.setSizePolicy(self,
@@ -154,14 +64,12 @@ class default_plot(FigureCanvas):
         self.axes.cla()
         t = arange(0.0, 3.0, 0.01)
         s = sin(2 * pi * t)
+        self.setTitle(self.title)
     #    self.axes.plot(t, s)
         self.draw()
 
-    def update_figure(self, x,y):
-        # Build a list of 4 random integers between 0 and 10 (both inclusive)
-
-        t = self.axes.get_title()
-        self.axes.cla()
+    def update_figure(self, x, y):
+     #   self.axes.cla()
         self.axes.locator_params(axis='y', nbins=6)
         self.axes.locator_params(axis='x', nbins=6)
         self.axes.plot(x, y, 'r')
@@ -172,11 +80,12 @@ class default_plot(FigureCanvas):
         self.axes.locator_params(axis='x', nbins=6)
 
         self.fig.autofmt_xdate()
-        self.axes.set_title(t)
+        self.setTitle(self.title)
         self.draw()
 
     def setTitle(self, title):
-        self.axes.set_title(title)
+        self.title = title
+        self.axes.set_title(self.title)
 
 
 class MainWindow(QMainWindow):
@@ -189,9 +98,14 @@ class MainWindow(QMainWindow):
         self.ui.logComboBox.activated.connect(self.logComboChanged)
         self.clear_plot_data()
 
+        self.ui.startDateEdit.dateTimeChanged.connect(self.startDateChanged)
 
+        self.ui.endDateEdit.dateTimeChanged.connect(self.endDateChanged)
 
-    #def resizeEvent(self, event):
+        self.deltaTime = REPLOT_DELTA_TIME*60
+
+        self.startDate = 0
+        self.endDate = 0
 
     def logComboChanged(self):
 
@@ -285,33 +199,38 @@ class MainWindow(QMainWindow):
                 self.ui.plot3.update_figure(self.time, self.tvoc)
                 self.ui.plot4.update_figure(self.time, self.lux)
 
+                self.ui.plot1.setTitle("temp")
+                self.ui.plot2.setTitle("co2")
+                self.ui.plot3.setTitle("tvoc")
+                self.ui.plot4.setTitle("lux")
+
                 print("loaded times ")
 
 
-                startTime = int(round(mdates.num2epoch(mdates.date2num(self.time[1]))))
-                endTime = int(round(mdates.num2epoch(mdates.date2num(self.time[len(self.time)-3]))))
+                startTime = int(round(mdates.num2epoch(mdates.date2num(self.time[0]))))
+                endTime = int(round(mdates.num2epoch(mdates.date2num(self.time[len(self.time)-1]))))
 
                 print(endTime - startTime)
                 minStartDate = QDateTime.fromTime_t(startTime)
                 maxStartDate = QDateTime.fromTime_t(endTime)
 
+                self.startDate = self.time[1]
+                self.endDate = self.time[len(self.time)-1]
+                self.ui.startDateEdit.setMinimumDateTime(minStartDate)
+                self.ui.startDateEdit.setMaximumDateTime(maxStartDate)
+                self.ui.endDateEdit.setMinimumDateTime(minStartDate)
+                self.ui.endDateEdit.setMaximumDateTime(maxStartDate)
 
 
-                print(maxStartDate)
+    def startDateChanged(self):
+        print("start date changed")
+        print(self.startDate)
+        print(int(round(mdates.num2epoch(mdates.date2num(self.time[0])))))
+        print(QDateTime.toSecsSinceEpoch(self.ui.startDateEdit.dateTime()))
+        print(self.ui.startDateEdit.dateTime())
 
-                print(minStartDate)
-               # print(minStartDate)
-
-             #   minStartDate = QDateTime.currentDateTime()
-             #   maxStartDate = QDateTime.currentDateTime()
-             #   minStartDate = maxStartDate
-
-                self.ui.startDate.setMinimumDateTime(minStartDate)
-                self.ui.startDate.setMaximumDateTime(maxStartDate)
-                self.ui.endDate.setMinimumDateTime(minStartDate)
-                self.ui.endDate.setMaximumDateTime(maxStartDate)
-
-
+    def endDateChanged(self):
+        print("end date changed")
 
 
 if __name__ == '__main__':
