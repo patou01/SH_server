@@ -29,11 +29,15 @@ def temp_callback(client, userdata, message):
         row = []
         row.append(time.time())
         n = len(split_msg)
+     #   print(n)
         for i in range(0, n):
+            #    print(split_msg[i])
                 row.append(float(split_msg[i]))
-                
+              #  print(row)
+
 
         f = open(filename, 'a')
+       # print(f.name)
         writer = csv.writer(f)
         writer.writerow(row)
         print("wrote row " + row + " at " + time.asctime( time.localtime(time.time())) + " to file " + filename)
@@ -52,7 +56,7 @@ client_name = "poney"
 name_int = random.getrandbits(16)
 name_int_str = str(name_int)
 client_name += name_int_str
-broker_address = "192.168.0.112"
+broker_address = "192.168.10.229"
 client = mqtt.Client(client_name) #create new instance
 
 client.on_message = temp_callback

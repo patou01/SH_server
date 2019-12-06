@@ -11,6 +11,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QComboBox
 
 from PyQt5.QtCore import QDateTime
 
+from rangeSlider import RangeSlider
+
 from mainwindow import Ui_MainWindow
 
 
@@ -27,13 +29,13 @@ yearsFmt = mdates.DateFormatter('%Y')
 daysFmt = mdates.DateFormatter('%d')
 
 TIME_INDEX = 0
-TEMP_DHT_INDEX = 1
-HUM_DHT_INDEX = 2
-CO2_INDEX = 3
-TVOC_INDEX = 4
-TEMP_HDC_INDEX = 5
-HUM_HDC_INDEX = 6
-LUX_INDEX = 7
+TEMP_DHT_INDEX = 2
+HUM_DHT_INDEX = 3
+CO2_INDEX = 4
+TVOC_INDEX = 5
+TEMP_HDC_INDEX = 6
+HUM_HDC_INDEX = 7
+LUX_INDEX = 8
 REPLOT_DELTA_TIME = 60 # minutes
 
 
@@ -58,7 +60,7 @@ class default_plot(FigureCanvas):
         self.axes.xaxis.set_major_formatter(mdates.DateFormatter('%h'))
 
 
-        print("done init")
+     #   print("done init")
 
     def reset_plot(self):
         self.axes.cla()
@@ -97,15 +99,18 @@ class MainWindow(QMainWindow):
         self.ui.LogButton.clicked.connect(self.logButtonPress)
         self.ui.logComboBox.activated.connect(self.logComboChanged)
         self.clear_plot_data()
+        self.ui.timeRange = RangeSlider()
 
-        self.ui.startDateEdit.dateTimeChanged.connect(self.startDateChanged)
+     #   self.ui.startDateEdit.dateTimeChanged.connect(self.startDateChanged)
 
-        self.ui.endDateEdit.dateTimeChanged.connect(self.endDateChanged)
+     #   self.ui.endDateEdit.dateTimeChanged.connect(self.endDateChanged)
 
         self.deltaTime = REPLOT_DELTA_TIME*60
 
         self.startDate = 0
+        self.startIndex = 0
         self.endDate = 0
+        self.endIndex = 0
 
     def logComboChanged(self):
 
@@ -145,7 +150,7 @@ class MainWindow(QMainWindow):
         # this is kind of a hack, I'm not sure this actually put the focus on it, but since the file is selected already it's ok.
         self.ui.logComboBox.setCurrentText(activeFile)
 
-        print(activeFile)
+     #   print(activeFile)
         self.load_file(self.logFile)
 
     def clear_plot_data(self):
@@ -165,13 +170,13 @@ class MainWindow(QMainWindow):
         self.ui.plot4.reset_plot()
 
     def load_file(self, File):
-        print("trying to read " + File)
+     #   print("trying to read " + File)
         self.clear_plot_data()
         self.clear_plots()
         with open(File) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             line_count = 0
-            print("started reading csv")
+       #     print("started reading csv")
             for row in csv_reader:
                 if (row != []):
                     if(float(row[TEMP_DHT_INDEX]) < 120): # kind of a hack filter, the temperature data reads 200 if the sensor fails, and skipping a line every now and then is no big deal.
@@ -184,54 +189,124 @@ class MainWindow(QMainWindow):
                         self.H_hdc.append(float(row[HUM_HDC_INDEX]))
                         self.lux.append(float(row[LUX_INDEX]))
 
-            print("read csv")
+
 
             self.time = mdates.num2date(self.time)
             self.T_dht = np.array(self.T_dht)
             self.co2 = np.array(self.co2)
             self.tvoc = np.array(self.tvoc)
             self.lux = np.array(self.lux)
-            print(len(self.time))
+        #    print(len(self.time))
 
             if(len(self.time) > 1):
-                self.ui.plot1.update_figure(self.time, self.T_dht)
-                self.ui.plot2.update_figure(self.time, self.co2)
-                self.ui.plot3.update_figure(self.time, self.tvoc)
-                self.ui.plot4.update_figure(self.time, self.lux)
-
-                self.ui.plot1.setTitle("temp")
-                self.ui.plot2.setTitle("co2")
-                self.ui.plot3.setTitle("tvoc")
-                self.ui.plot4.setTitle("lux")
-
-                print("loaded times ")
-
+                self.update_plots(0, len(self.time)-1)
 
                 startTime = int(round(mdates.num2epoch(mdates.date2num(self.time[0]))))
                 endTime = int(round(mdates.num2epoch(mdates.date2num(self.time[len(self.time)-1]))))
 
-                print(endTime - startTime)
                 minStartDate = QDateTime.fromTime_t(startTime)
                 maxStartDate = QDateTime.fromTime_t(endTime)
 
-                self.startDate = self.time[1]
+         #       print(minStartDate)
+        #        print(maxStartDate)
+                self.startDate = self.time[0]
+                self.startIndex = 0
                 self.endDate = self.time[len(self.time)-1]
-                self.ui.startDateEdit.setMinimumDateTime(minStartDate)
-                self.ui.startDateEdit.setMaximumDateTime(maxStartDate)
-                self.ui.endDateEdit.setMinimumDateTime(minStartDate)
-                self.ui.endDateEdit.setMaximumDateTime(maxStartDate)
+                self.endIndex = len(self.time)-1
+      #          self.ui.endDateEdit.setDateTime(maxStartDate)
 
+            #    self.ui.endDateEdit.setDisplayFormat('yyyy.MM.dd hh:mm')
+
+     #           self.ui.startDateEdit.setDateTimeRange(minStartDate, maxStartDate)
+       #         self.ui.endDateEdit.setDateTimeRange(minStartDate, maxStartDate)
+
+                print("read csv, number of lines: " + str(len(self.time)) + " start date " + minStartDate.toString() + " end date " + maxStartDate.toString())
+
+          #      self.ui.startDateEdit.setSelectedSection(1)
+
+
+    def update_plots(self, begin, end):
+  #      print(begin)
+ #       print(end)
+        if(begin >= 0 and end < len(self.time) and begin < end):
+            self.ui.plot1.update_figure(self.time[begin:end], self.T_dht[begin:end])
+            self.ui.plot2.update_figure(self.time[begin:end], self.co2[begin:end])
+            self.ui.plot3.update_figure(self.time[begin:end], self.tvoc[begin:end])
+            self.ui.plot4.update_figure(self.time[begin:end], self.lux[begin:end])
 
     def startDateChanged(self):
-        print("start date changed")
-        print(self.startDate)
-        print(int(round(mdates.num2epoch(mdates.date2num(self.time[0])))))
-        print(QDateTime.toSecsSinceEpoch(self.ui.startDateEdit.dateTime()))
-        print(self.ui.startDateEdit.dateTime())
+    #    newTime = QDateTime.toSecsSinceEpoch(self.ui.startDateEdit.dateTime())
+        if(len(self.time) > 0):
+            startEpoch = int(round(mdates.num2epoch(mdates.date2num(self.startDate))))
+      #      print(startEpoch - newTime)
+            if(startEpoch != newTime):
+                searchDirection = int((newTime - startEpoch)/abs(newTime - startEpoch))
+        #        print(searchDirection)
+
+                newIndex = self.startIndex
+                currEpoch = int(round(mdates.num2epoch(mdates.date2num(self.time[newIndex]))))
+
+                if(searchDirection > 0):
+                    while( currEpoch < newTime and newIndex < len(self.time)-1):
+
+                        newIndex += 1
+                        currEpoch = int(round(mdates.num2epoch(mdates.date2num(self.time[newIndex]))))
+
+       #             print(newIndex)
+                    self.startIndex = newIndex
+                    self.startDate = self.time[self.startIndex]
+
+                if (searchDirection < 0):
+                    while (currEpoch > newTime and newIndex > 0 ):
+                        newIndex -= 1
+                        currEpoch = int(round(mdates.num2epoch(mdates.date2num(self.time[newIndex]))))
+
+       #             print(newIndex)
+                    self.startIndex = newIndex
+                    self.startDate = self.time[self.startIndex]
+
+         #       print("updating plots")
+                self.update_plots(self.startIndex, self.endIndex)
+      #          self.ui.endDateEdit.setMinimumDateTime(self.ui.startDateEdit.dateTime())
 
     def endDateChanged(self):
-        print("end date changed")
+   #     print("end date changed")
 
+        #newTime = QDateTime.toSecsSinceEpoch(self.ui.endDateEdit.dateTime())
+        
+      #  print("end date: " + str(newTime))
+        if (len(self.time) > 0):
+            endEpoch = int(round(mdates.num2epoch(mdates.date2num(self.endDate))))
+      #      print("target: " + str(newTime) + " current end: " + str(endEpoch) + " diff target - current end: " + str(newTime - endEpoch))
+            if (endEpoch != newTime):
+                searchDirection = int((newTime - endEpoch) / abs(newTime - endEpoch))
+       #         print("search direction: " + str(searchDirection))
+
+                newIndex = self.endIndex
+                currEpoch = int(round(mdates.num2epoch(mdates.date2num(self.time[newIndex]))))
+
+                if (searchDirection > 0):
+     #               print("searching up")
+                    while (currEpoch < newTime and newIndex < len(self.time) - 1):
+                        newIndex += 1
+                        currEpoch = int(round(mdates.num2epoch(mdates.date2num(self.time[newIndex]))))
+
+       #             print(newIndex)
+                    self.endIndex = newIndex
+                    self.endDate = self.time[self.endIndex]
+
+                if (searchDirection < 0):
+         #           print("searching down")
+                    while (currEpoch > newTime and newIndex > 0):
+                        newIndex -= 1
+                        currEpoch = int(round(mdates.num2epoch(mdates.date2num(self.time[newIndex]))))
+
+        #            print("new index: " + str(newIndex))
+                    self.endIndex = newIndex
+                    self.endDate = self.time[self.endIndex]
+
+                self.update_plots(self.startIndex, self.endIndex)
+      #          self.ui.startDateEdit.setMaximumDateTime(self.ui.endDateEdit.dateTime())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
