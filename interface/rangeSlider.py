@@ -5,7 +5,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 
 
-MAXVAL = 65000
+MAXVAL = 1000
 
 class RangeSlider(QtWidgets.QWidget):
 
@@ -86,13 +86,16 @@ class RangeSlider(QtWidgets.QWidget):
     @QtCore.pyqtSlot(int)
     def handleStartSliderValueChange(self, value):
         self.startSlider.setValue(value)
+        print("startSlider " + str(value))
+        self.endSlider.setMaximum(value)
 
     @QtCore.pyqtSlot(int)
     def handleEndSliderValueChange(self, value):
         self.endSlider.setValue(value)
+        print("endSlider " + str(value))
 
 
 
-#app = QtWidgets.QApplication(sys.argv)
-#awindow = RangeSlider()
-#sys.exit(app.exec_())
+app = QtWidgets.QApplication(sys.argv)
+awindow = RangeSlider()
+sys.exit(app.exec_())
