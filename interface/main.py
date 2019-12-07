@@ -13,6 +13,7 @@ from PyQt5.QtCore import QDateTime
 
 from mainwindow import Ui_MainWindow
 
+from timeit import default_timer as timer
 
 from numpy import arange, sin, pi
 import numpy as np
@@ -32,10 +33,10 @@ REPLOT_THRESHOLD = 50
 TIME_INDEX = 0
 TEMP_DHT_INDEX = 2
 HUM_DHT_INDEX = 3
-CO2_INDEX = 4
-TVOC_INDEX = 5
-TEMP_HDC_INDEX = 6
-HUM_HDC_INDEX = 7
+CO2_INDEX = 6
+TVOC_INDEX = 7
+TEMP_HDC_INDEX = 4
+HUM_HDC_INDEX = 5
 LUX_INDEX = 8
 REPLOT_DELTA_TIME = 60 # minutes
 
@@ -155,7 +156,6 @@ class MainWindow(QMainWindow):
         # this is kind of a hack, I'm not sure this actually put the focus on it, but since the file is selected already it's ok.
         self.ui.logComboBox.setCurrentText(activeFile)
 
-     #   print(activeFile)
         self.load_file(self.logFile)
 
     def clear_plot_data(self):
@@ -193,14 +193,11 @@ class MainWindow(QMainWindow):
                         self.H_hdc.append(float(row[HUM_HDC_INDEX]))
                         self.lux.append(float(row[LUX_INDEX]))
 
-
-
             self.time = mdates.num2date(self.time)
             self.T_dht = np.array(self.T_dht)
             self.co2 = np.array(self.co2)
             self.tvoc = np.array(self.tvoc)
             self.lux = np.array(self.lux)
-
 
             if(len(self.time) > 1):
                 self.update_plots(0, len(self.time)-1)
@@ -215,11 +212,8 @@ class MainWindow(QMainWindow):
                 self.startIndex = 0
                 self.endDate = self.time[len(self.time)-1]
                 self.endIndex = len(self.time)-1
-
-
+                
                 print("read csv, number of lines: " + str(len(self.time)) + " start date " + minStartDate.toString() + " end date " + maxStartDate.toString())
-
-
 
     def update_plots(self, begin, end):
         if(begin >= 0 and end <= len(self.time) and begin < end):
@@ -229,7 +223,7 @@ class MainWindow(QMainWindow):
             self.ui.plot4.update_figure(self.time[begin:end], self.lux[begin:end])
 
     def startDateChanged(self):
-
+        start = timer()
         # only change if there's a big enough change
         if(abs(self.startSliderValue - self.ui.startDateSlider.value()) > REPLOT_THRESHOLD):
             self.startSliderValue = self.ui.startDateSlider.value()
@@ -238,11 +232,12 @@ class MainWindow(QMainWindow):
         if(self.ui.endDateSlider.value() - self.ui.startDateSlider.value() < 10):
             self.ui.startDateSlider.setValue(self.ui.endDateSlider.value() - 10)
 
-        # update the plots
+        # call common callback
         self.startEndDateChanged()
+        end = timer()
+        print(end-start)
         
     def endDateChanged(self):
-
         # only change if htere's a big enough change
         if(abs(self.endSliderValue - self.ui.endDateSlider.value()) > REPLOT_THRESHOLD):
             self.endSliderValue = self.ui.endDateSlider.value()
@@ -251,16 +246,17 @@ class MainWindow(QMainWindow):
         if(self.ui.endDateSlider.value() - self.ui.startDateSlider.value() < 10):
            self.ui.endDateSlider.setValue(self.ui.startDateSlider.value() + 10)
 
-        # update plots
+        # call common callback
         self.startEndDateChanged()
 
 
+    #checks if we have a log file loaded, then computes start/end indices and updates plots.
     def startEndDateChanged(self):
-        n = len(self.time)
+        n = len(self.time) 
         if(n > 0):
             self.startIndex =  int(self.startSliderValue * n / 1000)
             self.endIndex = int(self.endSliderValue * n/1000)
-       #     print("startIndex " + str(self.startIndex) + " endIndex " +str(self.endIndex))
+              
             self.update_plots(self.startIndex, self.endIndex)
         
 
