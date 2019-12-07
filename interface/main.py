@@ -26,6 +26,9 @@ days = mdates.DayLocator()
 yearsFmt = mdates.DateFormatter('%Y')
 daysFmt = mdates.DateFormatter('%d')
 
+
+REPLOT_THRESHOLD = 50
+
 TIME_INDEX = 0
 TEMP_DHT_INDEX = 2
 HUM_DHT_INDEX = 3
@@ -228,7 +231,7 @@ class MainWindow(QMainWindow):
     def startDateChanged(self):
 
         # only change if there's a big enough change
-        if(abs(self.startSliderValue - self.ui.startDateSlider.value()) > 10):
+        if(abs(self.startSliderValue - self.ui.startDateSlider.value()) > REPLOT_THRESHOLD):
             self.startSliderValue = self.ui.startDateSlider.value()
      
         # set new max value
@@ -241,7 +244,7 @@ class MainWindow(QMainWindow):
     def endDateChanged(self):
 
         # only change if htere's a big enough change
-        if(abs(self.endSliderValue - self.ui.endDateSlider.value()) > 10):
+        if(abs(self.endSliderValue - self.ui.endDateSlider.value()) > REPLOT_THRESHOLD):
             self.endSliderValue = self.ui.endDateSlider.value()
         
        # set new min value
