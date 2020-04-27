@@ -177,13 +177,19 @@ class MainWindow(QMainWindow):
     def load_file(self, File):
         self.clear_plot_data()
         self.clear_plots()
+        print("still alive")
         with open(File) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             line_count = 0
 
+            print("yep")
+            #print(csv_reader.line_num)
             for row in csv_reader:
-                if (row != []):
-                    if(float(row[TEMP_DHT_INDEX]) < 120): # kind of a hack filter, the temperature data reads 200 if the sensor fails, and skipping a line every now and then is no big deal.
+                if (csv_reader.line_num == 1):
+                #    print(csv_reader.line_num)
+                    print(row)
+                elif (row != []):
+                    if(float(row[TEMP_DHT_INDEX]) < 120): # kind of a hack filter, the temperature data reads 200 if the sensor fails, and skipping a line every now and then is no big deal. Probably not needed with updated library
                         self.time.append(mdates.epoch2num(float(row[TIME_INDEX])))
                         self.T_dht.append(float(row[TEMP_DHT_INDEX]))
                         self.H_dht.append(float(row[HUM_DHT_INDEX]))

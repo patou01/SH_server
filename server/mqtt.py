@@ -56,7 +56,7 @@ client_name = "poney"
 name_int = random.getrandbits(16)
 name_int_str = str(name_int)
 client_name += name_int_str
-broker_address = "192.168.10.229"
+broker_address = "192.168.1.39"
 client = mqtt.Client(client_name) #create new instance
 
 client.on_message = temp_callback
