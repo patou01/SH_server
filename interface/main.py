@@ -6,8 +6,9 @@ import os
 import csv
 import datetime
 
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QComboBox
+
+from PyQt5 import QtWidgets, QtCore, Qt
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QComboBox, QListWidget, QListWidgetItem
 
 from PyQt5.QtCore import QDateTime
 
@@ -20,6 +21,7 @@ import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
 
 years = mdates.YearLocator()   # every year
 months = mdates.MonthLocator()  # every month
@@ -31,65 +33,81 @@ daysFmt = mdates.DateFormatter('%d')
 REPLOT_THRESHOLD = 50
 
 TIME_INDEX = 0
-TEMP_DHT_INDEX = 2
-HUM_DHT_INDEX = 3
-CO2_INDEX = 6
-TVOC_INDEX = 7
-TEMP_HDC_INDEX = 4
-HUM_HDC_INDEX = 5
-LUX_INDEX = 8
-REPLOT_DELTA_TIME = 60 # minutes
-
 
 
 class default_plot(FigureCanvas):
-    """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
+    #"""Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
 
-    def __init__(self, parent=None, width=4, height=3, dpi=100):
+    def __init__(self, parent=None, width=8, height=7, dpi=100):
 
         self.fig = Figure(figsize=(parent.geometry().width()/dpi, parent.geometry().height()/dpi), dpi=dpi)
+        self.ax = []
         FigureCanvas.__init__(self, self.fig)
-        self.axes = self.fig.add_subplot(111)
-        self.title = ''
-        self.reset_plot()
+        self.ax.append( self.fig.add_subplot(111))
+     #   self.axes = self.fig.add_subplot(111)
+ #       self.title = ''
         self.setParent(parent)
         FigureCanvas.setSizePolicy(self,
                                    QtWidgets.QSizePolicy.Expanding,
                                    QtWidgets.QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
 
-        self.axes.xaxis.set_major_locator(days)
-        self.axes.xaxis.set_major_formatter(mdates.DateFormatter('%h'))
+  #      self.axes.xaxis.set_major_locator(days)
+  #      self.axes.xaxis.set_major_formatter(mdates.DateFormatter('%h'))
 
-
+        self.colors = ['b','g','r', 'c', 'm', 'y', 'k']
+        
+        self.fig.clf()
      #   print("done init")
 
     def reset_plot(self):
-        self.axes.cla()
-        t = arange(0.0, 3.0, 0.01)
-        s = sin(2 * pi * t)
-        self.setTitle(self.title)
-    #    self.axes.plot(t, s)
-        self.draw()
+        for a in self.ax:
+            a.cla()
 
-    def update_figure(self, x, y):
-     #   self.axes.cla()
-        self.axes.locator_params(axis='y', nbins=6)
-        self.axes.locator_params(axis='x', nbins=6)
-        self.axes.plot(x, y, 'r')
-        self.axes.format_xdata = mdates.DateFormatter('%h')
-        self.axes.fmt_xdata = mdates.DateFormatter('%h')
-        self.axes.set_xlim(x[0], x[-1])
-        self.axes.locator_params(axis='y', nbins=6)
-        self.axes.locator_params(axis='x', nbins=6)
+       # for i in range(1,len(self.ax)-1):
+      #      self.ax[-i]
 
-        self.fig.autofmt_xdate()
-        self.setTitle(self.title)
-        self.draw()
+
+    def update_figure(self, x, y, headers):
+
+  #     self.reset_plot()
+        print(y[:,1:3])
+
+        plt.figure()
+        print("alive")
+        plt.plot(x, y[1,:], self.colors[0])
+       # self.ax[0].plot(x, y[1,:], self.colors[0])
+  #      self.ax[0].format_xdata = mdates.DateFormatter('%h')
+   #     self.ax[0].fmt_xdata = mdates.DateFormatter('%h')
+    #    self.ax[0].set_xlim(x[0], x[-1])
+     #   self.ax[0].locator_params(axis='y', nbins=3)
+      #  self.ax[0].locator_params(axis='x', nbins=6)
+       # self.ax[0].set_xlabel("time")
+
+        print("done")
+        
+ #       for i in range(3, len(headers)):
+   #         if(headers[i][1] == True):
+      #          print("i " + str(i) + " len self.ax " + str(len(self.ax)) + " len data " + str(len(y)) + " len header " + str(len(headers)))
+  #              self.ax.append( self.ax[0].twinx())
+
+   #             a = self.ax[len(self.ax)-1]
+    #            a.plot(x, y[i-2, :], self.colors[len(self.ax)-1])
+
+
+#        self.ax3.spines["right"].set_position(("axes", 1.2))
+    
+ #       self.ax3.spines["right"].set_visible(True)
+
+#        self.fig.autofmt_xdate()
+    #    self.fig.tight_layout()
+        
+      #  self.setTitle(self.title)
+#        self.draw()
 
     def setTitle(self, title):
         self.title = title
-        self.axes.set_title(self.title)
+       # self.axes.set_title(self.title)
 
 
 class MainWindow(QMainWindow):
@@ -111,8 +129,6 @@ class MainWindow(QMainWindow):
         self.ui.startDateSlider.valueChanged.connect(self.startDateChanged)
         self.ui.endDateSlider.valueChanged.connect(self.endDateChanged)
         
-
-        self.deltaTime = REPLOT_DELTA_TIME*60
 
         self.startDate = 0
         self.startIndex = 0
@@ -158,50 +174,68 @@ class MainWindow(QMainWindow):
 
         self.load_file(self.logFile)
 
+
+
     def clear_plot_data(self):
         self.time = []
-        self.T_dht = []
-        self.H_dht = []
-        self.co2 = []
-        self.tvoc = []
-        self.T_hdc = []
-        self.H_hdc = []
-        self.lux = []
+        self.dataList = []
+        self.dataArr = []
+        self.headerPlot = []
+
+
 
     def clear_plots(self):
         self.ui.plot1.reset_plot()
-        self.ui.plot2.reset_plot()
-        self.ui.plot3.reset_plot()
-        self.ui.plot4.reset_plot()
+
+
+
+    def selection_changed(self):
+        # get all true/false values for plotting
+        dataList = self.ui.dataListWidget
+        for i in range(dataList.count()):
+            self.headerPlot[i] = [dataList.item(i).text(), bool(dataList.item(i).checkState())]
+
+        #replot
+        self.update_plots()
+
+
+
 
     def load_file(self, File):
         self.clear_plot_data()
-        self.clear_plots()
+        self.ui.dataListWidget.clear()
+
         with open(File) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
-            line_count = 0
+            headers = next(csv_reader) # first line is the headers
+
+            #ignore the first 2 headers because they're both time due to a screw up and we use time as x axis at the moment
+            for i in range(2, len(headers)):
+                self.headerPlot.append([headers[i], False])
+                item = QListWidgetItem(headers[i])
+                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                item.setCheckState(QtCore.Qt.Unchecked)
+                self.ui.dataListWidget.addItem(item)
+
+            self.ui.dataListWidget.itemChanged.connect(self.selection_changed)
+
+            for i in range(0, len(self.headerPlot)):
+                self.dataList.append([])
 
             for row in csv_reader:
                 if (row != []):
-                    if(float(row[TEMP_DHT_INDEX]) < 120): # kind of a hack filter, the temperature data reads 200 if the sensor fails, and skipping a line every now and then is no big deal.
-                        self.time.append(mdates.epoch2num(float(row[TIME_INDEX])))
-                        self.T_dht.append(float(row[TEMP_DHT_INDEX]))
-                        self.H_dht.append(float(row[HUM_DHT_INDEX]))
-                        self.co2.append(float(row[CO2_INDEX]))
-                        self.tvoc.append(float(row[TVOC_INDEX]))
-                        self.T_hdc.append(float(row[TEMP_HDC_INDEX]))
-                        self.H_hdc.append(float(row[HUM_HDC_INDEX]))
-                        self.lux.append(float(row[LUX_INDEX]))
+                    self.time.append(mdates.epoch2num(float(row[TIME_INDEX])))
+                
+                    for i in range(2,len(row)):
+                        self.dataList[i-2].append(float(row[i]))
 
+
+            #convert to more usable formats
             self.time = mdates.num2date(self.time)
-            self.T_dht = np.array(self.T_dht)
-            self.co2 = np.array(self.co2)
-            self.tvoc = np.array(self.tvoc)
-            self.lux = np.array(self.lux)
+            self.dataArr = np.array(self.dataList)
 
+            # set the scope to plot and plot it
             if(len(self.time) > 1):
-                self.update_plots(0, len(self.time)-1)
-
                 startTime = int(round(mdates.num2epoch(mdates.date2num(self.time[0]))))
                 endTime = int(round(mdates.num2epoch(mdates.date2num(self.time[len(self.time)-1]))))
 
@@ -213,17 +247,16 @@ class MainWindow(QMainWindow):
                 self.endDate = self.time[len(self.time)-1]
                 self.endIndex = len(self.time)-1
                 
-                print("read csv, number of lines: " + str(len(self.time)) + " start date " + minStartDate.toString() + " end date " + maxStartDate.toString())
+                print("read csv, number of lines: " + str(len(self.time)) + " start date " + minStartDate.toString() + " end date " + maxStartDate.toString() + " number of datapoints " + str(len(self.dataArr[3])))
 
-    def update_plots(self, begin, end):
-        if(begin >= 0 and end <= len(self.time) and begin < end):
-            self.ui.plot1.update_figure(self.time[begin:end], self.T_dht[begin:end])
-            self.ui.plot2.update_figure(self.time[begin:end], self.co2[begin:end])
-            self.ui.plot3.update_figure(self.time[begin:end], self.tvoc[begin:end])
-            self.ui.plot4.update_figure(self.time[begin:end], self.lux[begin:end])
+                self.update_plots()
+
+    def update_plots(self):
+        if(self.startIndex >= 0 and self.endIndex <= len(self.time) and self.startIndex < self.endIndex):
+            self.clear_plots()
+            self.ui.plot1.update_figure(self.time[self.startIndex:self.endIndex], self.dataArr[:,self.startIndex:self.endIndex], self.headerPlot)
 
     def startDateChanged(self):
-        start = timer()
         # only change if there's a big enough change
         if(abs(self.startSliderValue - self.ui.startDateSlider.value()) > REPLOT_THRESHOLD):
             self.startSliderValue = self.ui.startDateSlider.value()
@@ -234,8 +267,7 @@ class MainWindow(QMainWindow):
 
         # call common callback
         self.startEndDateChanged()
-        end = timer()
-        print(end-start)
+
         
     def endDateChanged(self):
         # only change if htere's a big enough change
@@ -256,9 +288,7 @@ class MainWindow(QMainWindow):
         if(n > 0):
             self.startIndex =  int(self.startSliderValue * n / 1000)
             self.endIndex = int(self.endSliderValue * n/1000)
-              
-            self.update_plots(self.startIndex, self.endIndex)
-        
+            self.update_plots()   
 
 
 
@@ -266,13 +296,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = MainWindow()
     w.ui.plot1 = default_plot(w.ui.plot1)
-    w.ui.plot2 = default_plot(w.ui.plot2)
-    w.ui.plot3 = default_plot(w.ui.plot3)
-    w.ui.plot4 = default_plot(w.ui.plot4)
     w.ui.plot1.setTitle("temp")
-    w.ui.plot2.setTitle("co2")
-    w.ui.plot3.setTitle("tvoc")
-    w.ui.plot4.setTitle("lux")
+
 
 
 

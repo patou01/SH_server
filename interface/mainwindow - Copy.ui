@@ -49,8 +49,8 @@
        </property>
        <property name="minimumSize">
         <size>
-         <width>800</width>
-         <height>800</height>
+         <width>400</width>
+         <height>400</height>
         </size>
        </property>
        <property name="maximumSize">
@@ -136,7 +136,7 @@
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QListWidget" name="dataListWidget"/>
+      <widget class="QListWidget" name="listWidget"/>
      </item>
     </layout>
    </widget>
