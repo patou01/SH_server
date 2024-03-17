@@ -38,3 +38,6 @@ class CsvFetcher(DataFetcher):
                     return [timestamps, points]
 
         logging.warning(f"Nothing found for {room} {data_type}")
+
+    def get_available_data_types(self):
+        return [file.parts[-1].replace(".csv", "") for file in self.files]
