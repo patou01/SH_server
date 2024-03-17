@@ -39,5 +39,10 @@ class CsvFetcher(DataFetcher):
 
         logging.warning(f"Nothing found for {room} {data_type}")
 
-    def get_available_data_types(self):
-        return [file.parts[-1].replace(".csv", "") for file in self.files]
+    def get_available_data_types(self, room: str):
+        ret_values = []
+        for file in self.files:
+            if file.parts[-2] == room:
+                ret_values.append(file.parts[-1].replace(".csv", ""))
+        return ret_values
+        return [file.parts[-1].replace(".csv", "") for file in self.files if file.parts[-2] == room]
