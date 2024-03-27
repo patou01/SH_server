@@ -39,18 +39,20 @@ def temp_callback(client, userdata, message):
     logging.debug(f"message info: topic {message.topic}, qos: {message.qos}, retain: {message.retain}")
     logging.info(f" {counter}, Received message '{msg}' at {time_str} for {split_topic[-1]}")
 
-    room_path = DATA_FOLDER / split_topic[0]
-    if not room_path.exists():
-        os.makedirs(room_path)
+    if len(split_topic) > 1:
+        # These are the sensors, at room/data_type.
+        room_path = DATA_FOLDER / split_topic[0]
+        if not room_path.exists():
+            os.makedirs(room_path)
 
-    filename = room_path / f"{split_topic[-1]}.csv"
-    mode = 'a'
-    if not os.path.exists(filename):
-        mode = 'w'
+        filename = room_path / f"{split_topic[-1]}.csv"
+        mode = 'a'
+        if not os.path.exists(filename):
+            mode = 'w'
 
-    with open(filename, mode) as f:
-        writer = csv.writer(f)
-        writer.writerow([time_received, float(msg)])
+        with open(filename, mode) as f:
+            writer = csv.writer(f)
+            writer.writerow([time_received, float(msg)])
 
 
 def on_connect(client, userdata, flags, rc):

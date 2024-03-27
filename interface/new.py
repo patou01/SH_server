@@ -121,7 +121,14 @@ class MainWindow(QMainWindow):
             target = self.graphWidget2
 
         target.plotItem.clear()
-        target.plot(timestamps, data)
+        clear_time = []
+        clear_dat = []
+        for ts, dat in zip(timestamps, data):
+            if dat > 0:
+                clear_time.append(ts)
+                clear_dat.append(dat)
+        # ts, dat = ([timestamp], [datapoint] for timestamp, datapoint in zip(timestamps, data) if datapoint > 0)
+        target.plot(clear_time, clear_dat)
 
 
 app = QApplication(sys.argv)
