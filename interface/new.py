@@ -2,21 +2,16 @@ import logging
 import os
 from pathlib import Path
 
-import numpy as np
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QComboBox, QPushButton, \
     QFileDialog
 import pyqtgraph as pg
 import sys
 
-from pyqtgraph import DateAxisItem, Color
+from pyqtgraph import DateAxisItem
 
 from interface.data_fetcher import CsvFetcher
 
 logging.basicConfig(level=logging.INFO)
-
-
-
-
 
 
 class MainWindow(QMainWindow):
@@ -25,8 +20,6 @@ class MainWindow(QMainWindow):
         self.fetcher = CsvFetcher(Path("../server/data"))
 
         self.current_folder = "bedroom"
-        data1 = self.fetcher.fetch(self.current_folder, "co2")
-        data2 = self.fetcher.fetch(self.current_folder, "temperature")
 
         axis = DateAxisItem()
         layout = QVBoxLayout()
@@ -34,11 +27,9 @@ class MainWindow(QMainWindow):
         horiz1 = QHBoxLayout()
 
         self.graphWidget = pg.PlotWidget(axisItems={'bottom': axis})
-        self.graphWidget.plot(data1[0], data1[1])
 
         axis2 = DateAxisItem()
         self.graphWidget2 = pg.PlotWidget(axisItems={'bottom': axis2})
-        self.graphWidget2.plot(data2[0], data2[1])
 
         types = self.fetcher.get_available_data_types(self.current_folder)
 
@@ -56,6 +47,8 @@ class MainWindow(QMainWindow):
         horiz2 = QHBoxLayout()
         self.box2 = QComboBox()
         self.box2.addItems(types)
+        if len(types) > 1:
+            self.box2.setCurrentIndex(1)
         self.box2.currentTextChanged.connect(self.combo2_callback)
         horiz2.addWidget(self.box2)
         horiz2.addWidget(self.graphWidget2)
@@ -65,6 +58,7 @@ class MainWindow(QMainWindow):
         layout.addLayout(horiz2)
 
         self.setCentralWidget(widget)
+        self.replot()
 
     def find_folder(self):
         logging.info("Searching!")
@@ -127,7 +121,7 @@ class MainWindow(QMainWindow):
             if dat > 0:
                 clear_time.append(ts)
                 clear_dat.append(dat)
-        # ts, dat = ([timestamp], [datapoint] for timestamp, datapoint in zip(timestamps, data) if datapoint > 0)
+
         target.plot(clear_time, clear_dat)
 
 
