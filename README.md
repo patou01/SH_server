@@ -19,5 +19,7 @@ This connects to the data source and enables a simple display of the data.
 ### todo:
 - enable viewing as a map, based on sensor location
 - Make the general interface better for plotting:
-  - zooms both horizontal/vertical
-  - align plots on same time
+  - zooms on the plots
+  - keep plots aligned on same time
+  - make a big "add" button with which to add more data to plot (or less)
+  - Add a way to select from/until (currently missing callback)
