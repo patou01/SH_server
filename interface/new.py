@@ -2,8 +2,10 @@ import logging
 import os
 from pathlib import Path
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QComboBox, QPushButton, \
-    QFileDialog
+from PySide6.QtCore import QDate
+from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QComboBox, \
+    QPushButton, \
+    QFileDialog, QDateTimeEdit, QLabel
 import pyqtgraph as pg
 import sys
 
@@ -53,7 +55,29 @@ class MainWindow(QMainWindow):
         horiz2.addWidget(self.box2)
         horiz2.addWidget(self.graphWidget2)
 
+        from_box = QHBoxLayout()
+        self.from_date = QDateTimeEdit(QDate.currentDate())
+        self.from_date.setCalendarPopup(True)
+        self.from_date.setDisplayFormat("yyyy/M/d")
+        self.from_hour = QDateTimeEdit(QDate.currentDate())
+        self.from_hour.setDisplayFormat("h:mm")
+        from_box.addWidget(QLabel("From"))
+        from_box.addWidget(self.from_date)
+        from_box.addWidget(self.from_hour)
+
+        until_box = QHBoxLayout()
+        self.until_date = QDateTimeEdit(QDate.currentDate())
+        self.until_date.setCalendarPopup(True)
+        self.until_date.setDisplayFormat("yyyy/M/d")
+        self.until_hour = QDateTimeEdit(QDate.currentDate())
+        self.until_hour.setDisplayFormat("h:mm")
+        until_box.addWidget(QLabel("Until"))
+        until_box.addWidget(self.until_date)
+        until_box.addWidget(self.until_hour)
+
         layout.addWidget(folder_button)
+        layout.addLayout(from_box)
+        layout.addLayout(until_box)
         layout.addLayout(horiz1)
         layout.addLayout(horiz2)
 
