@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QDate
@@ -59,8 +60,10 @@ class MainWindow(QMainWindow):
         self.from_date = QDateTimeEdit(QDate.currentDate())
         self.from_date.setCalendarPopup(True)
         self.from_date.setDisplayFormat("yyyy/M/d")
+        self.from_date.dateTimeChanged.connect(self.hours_callback)
         self.from_hour = QDateTimeEdit(QDate.currentDate())
         self.from_hour.setDisplayFormat("h:mm")
+        self.from_hour.dateTimeChanged.connect(self.hours_callback)
         from_box.addWidget(QLabel("From"))
         from_box.addWidget(self.from_date)
         from_box.addWidget(self.from_hour)
@@ -69,8 +72,10 @@ class MainWindow(QMainWindow):
         self.until_date = QDateTimeEdit(QDate.currentDate())
         self.until_date.setCalendarPopup(True)
         self.until_date.setDisplayFormat("yyyy/M/d")
+        self.until_date.dateTimeChanged.connect(self.hours_callback)
         self.until_hour = QDateTimeEdit(QDate.currentDate())
         self.until_hour.setDisplayFormat("h:mm")
+        self.until_hour.dateTimeChanged.connect(self.hours_callback)
         until_box.addWidget(QLabel("Until"))
         until_box.addWidget(self.until_date)
         until_box.addWidget(self.until_hour)
@@ -127,6 +132,9 @@ class MainWindow(QMainWindow):
         self.plot(self.box1.currentText(), 0)
         self.plot(self.box2.currentText(), 1)
 
+    def hours_callback(self, date):
+        self.replot()
+
     def plot(self, item: str, index: int):
         """
         Fetches the data and plots.
@@ -141,12 +149,26 @@ class MainWindow(QMainWindow):
         target.plotItem.clear()
         clear_time = []
         clear_dat = []
-        for ts, dat in zip(timestamps, data):
-            if dat > 0:
-                clear_time.append(ts)
-                clear_dat.append(dat)
 
-        target.plot(clear_time, clear_dat)
+        # todo fix timezones stuff, it's ugly.
+        from_date = self.from_date.dateTime().toPython()
+        from_hour = self.from_hour.dateTime().toPython()
+        start = datetime(from_date.year, from_date.month, from_date.day, from_hour.hour, from_hour.minute)
+        start_ts = start.timestamp()
+
+        until_date = self.until_date.dateTime().toPython()
+        until_hour = self.until_hour.dateTime().toPython()
+        end = datetime(until_date.year, until_date.month, until_date.day, until_hour.hour, until_hour.minute)
+        end_ts = end.timestamp()
+
+        for ts, dat in zip(timestamps, data):
+            if start_ts < ts < end_ts:
+                if dat > 0:
+                    clear_time.append(ts)
+                    clear_dat.append(dat)
+
+        if clear_time:
+            target.plot(clear_time, clear_dat)
 
 
 app = QApplication(sys.argv)

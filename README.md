@@ -22,4 +22,5 @@ This connects to the data source and enables a simple display of the data.
   - zooms on the plots
   - keep plots aligned on same time
   - make a big "add" button with which to add more data to plot (or less)
-  - Add a way to select from/until (currently missing callback)
+  - Add a way to select from/until (currently it sucks)
+  - performance with changing time is bad
