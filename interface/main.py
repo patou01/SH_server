@@ -1,7 +1,9 @@
 import logging
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
+from typing import List
 
 import pyqtgraph as pg
 from pyqtgraph import DateAxisItem
@@ -50,10 +52,22 @@ class PlotLayout(QHBoxLayout):
         self.plot()
 
     def set_start(self, start_ts: float):
+        """
+        Set start timestamp
+        :param start_ts:
+        :return:
+        """
         self.start_timestamp = start_ts
+        self.plot()
 
     def set_end(self, end_ts: float):
+        """
+        Set end timestamp
+        :param end_ts:
+        :return:
+        """
         self.end_timestamp = end_ts
+        self.plot()
 
     def plot(self):
         measurement = self.box.currentText()
@@ -71,6 +85,13 @@ class PlotLayout(QHBoxLayout):
 
         if clear_time:
             self.graph.plot(clear_time, clear_dat)
+
+    def update_combo_texts(self, types: List[str]):
+        self.box.blockSignals(True)
+        self.box.clear()
+        self.box.addItems(types)
+        self.box.blockSignals(False)
+        self.box.setCurrentIndex(0)
 
 
 class MainWindow(QMainWindow):
@@ -141,12 +162,31 @@ class MainWindow(QMainWindow):
         return until_box
 
     def start_hours_callback(self):
-        self.start_timestamp = 0
+        # todo fix timezones stuff, it's ugly.
+        from_date = self.from_date.dateTime().toPython()
+        from_hour = self.from_hour.dateTime().toPython()
+        start = datetime(
+            from_date.year,
+            from_date.month,
+            from_date.day,
+            from_hour.hour,
+            from_hour.minute,
+        )
+        self.start_timestamp = start.timestamp()
         for plot in self.plots:
             plot.set_start(self.start_timestamp)
 
     def end_hours_callback(self):
-        self.end_timestamp = 20000000000
+        until_date = self.until_date.dateTime().toPython()
+        until_hour = self.until_hour.dateTime().toPython()
+        end = datetime(
+            until_date.year,
+            until_date.month,
+            until_date.day,
+            until_hour.hour,
+            until_hour.minute,
+        )
+        self.end_timestamp = end.timestamp()
         for plot in self.plots:
             plot.set_end(self.end_timestamp)
 
@@ -169,11 +209,8 @@ class MainWindow(QMainWindow):
         """
         types = self.fetcher.get_available_data_types(self.current_folder)
         logging.info(f"Updated combo texts to {types}")
-        self.box1.blockSignals(True)
-        self.box1.clear()
-        self.box1.addItems(types)
-        self.box1.blockSignals(True)
-        self.box1.setCurrentIndex(0)
+        for plot in self.plots:
+            plot.update_combo_texts(types)
 
 
 app = QApplication(sys.argv)
