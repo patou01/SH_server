@@ -55,15 +55,6 @@ class MainWindow(QMainWindow):
         horiz1.addWidget(self.box1)
         horiz1.addWidget(self.graphWidget)
 
-        horiz2 = QHBoxLayout()
-        self.box2 = QComboBox()
-        self.box2.addItems(types)
-        if len(types) > 1:
-            self.box2.setCurrentIndex(1)
-        self.box2.currentTextChanged.connect(self.combo2_callback)
-        horiz2.addWidget(self.box2)
-        horiz2.addWidget(self.graphWidget2)
-
         from_box = QHBoxLayout()
         self.from_date = QDateTimeEdit(self.fetcher.get_start_date())
         self.from_date.setCalendarPopup(True)
@@ -92,7 +83,6 @@ class MainWindow(QMainWindow):
         self.layout.addLayout(from_box)
         self.layout.addLayout(until_box)
         self.layout.addLayout(horiz1)
-        self.layout.addLayout(horiz2)
 
         add_plot_layout = QHBoxLayout()
         add_button = QPushButton("Add plot")
@@ -146,7 +136,6 @@ class MainWindow(QMainWindow):
         Replots
         """
         self.plot(self.box1.currentText(), 0)
-        self.plot(self.box2.currentText(), 1)
 
     def hours_callback(self, date):
         self.replot()
