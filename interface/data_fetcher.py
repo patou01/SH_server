@@ -3,13 +3,11 @@ Provides an interface to fetch the data that can then be used to make plots.
 """
 import csv
 import logging
-from abc import abstractmethod, ABC
-from datetime import datetime
+from abc import ABC, abstractmethod
 from pathlib import Path
 
 
 class DataFetcher(ABC):
-
     @abstractmethod
     def fetch(self, room: str, data_type: str):
         """
@@ -30,7 +28,7 @@ class CsvFetcher(DataFetcher):
             if file.parts[-2] == room:
                 if file.name == f"{data_type}.csv":
                     logging.info(f"Found {file}")
-                    with open(file, 'r') as f:
+                    with open(file, "r") as f:
                         reader = csv.reader(f)
                         data = [row for row in reader if row]
                     timestamps = [float(row[0]) for row in data]
@@ -45,4 +43,8 @@ class CsvFetcher(DataFetcher):
             if file.parts[-2] == room:
                 ret_values.append(file.parts[-1].replace(".csv", ""))
         return ret_values
-        return [file.parts[-1].replace(".csv", "") for file in self.files if file.parts[-2] == room]
+        return [
+            file.parts[-1].replace(".csv", "")
+            for file in self.files
+            if file.parts[-2] == room
+        ]

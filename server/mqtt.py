@@ -12,16 +12,15 @@ each set of data is stored as .csv.
 In the future, this will be improved to use something like a database.
 
 """
+import argparse
+import csv
+import logging
 import os
+import random
+import time
 from pathlib import Path
 
 import paho.mqtt.client as mqtt
-import time
-import csv
-import random
-import logging
-import argparse
-
 
 logging.basicConfig(level=logging.INFO)
 counter = 0
@@ -36,8 +35,12 @@ def temp_callback(client, userdata, message):
     time_str = time.asctime(time.localtime(time_received))
     split_topic = message.topic.split("/")
 
-    logging.debug(f"message info: topic {message.topic}, qos: {message.qos}, retain: {message.retain}")
-    logging.info(f" {counter}, Received message '{msg}' at {time_str} for {split_topic[-1]}")
+    logging.debug(
+        f"message info: topic {message.topic}, qos: {message.qos}, retain: {message.retain}"
+    )
+    logging.info(
+        f" {counter}, Received message '{msg}' at {time_str} for {split_topic[-1]}"
+    )
 
     if len(split_topic) > 1:
         # These are the sensors, at room/data_type.
@@ -46,9 +49,9 @@ def temp_callback(client, userdata, message):
             os.makedirs(room_path)
 
         filename = room_path / f"{split_topic[-1]}.csv"
-        mode = 'a'
+        mode = "a"
         if not os.path.exists(filename):
-            mode = 'w'
+            mode = "w"
 
         with open(filename, mode) as f:
             writer = csv.writer(f)
@@ -56,10 +59,10 @@ def temp_callback(client, userdata, message):
 
 
 def on_connect(client, userdata, flags, rc):
-    if rc==0:
-        print("connected OK Returned code=",rc)
+    if rc == 0:
+        print("connected OK Returned code=", rc)
     else:
-        print("Bad connection Returned code=",rc)
+        print("Bad connection Returned code=", rc)
 
 
 def main(topic):

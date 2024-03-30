@@ -1,12 +1,12 @@
 # SH_server
 
-The goal of this repo is to store the server side of the "Smart home" concept. Essentially it offers two parts, one to 
+The goal of this repo is to store the server side of the "Smart home" concept. Essentially it offers two parts, one to
 log data, and one to display it.
 
 ## Server
 
 The server logs the data. Essentially, it just listens to MQTT and stores the data in an accessible way. For now it's just
-.csv to make it easy. 
+.csv to make it easy.
 
 ### todo:
 - store in a database
@@ -14,7 +14,7 @@ The server logs the data. Essentially, it just listens to MQTT and stores the da
 
 ## Interface
 
-This connects to the data source and enables a simple display of the data. 
+This connects to the data source and enables a simple display of the data.
 
 ### todo:
 - enable viewing as a map, based on sensor location
