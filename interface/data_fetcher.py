@@ -1,13 +1,15 @@
 """
 Provides an interface to fetch the data that can then be used to make plots.
 """
-import csv
+import datetime
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from time import time_ns
-from typing import List
+from typing import Dict, List
+
+import pandas as pd
 
 
 @dataclass
@@ -35,7 +37,7 @@ class CsvFetcher(DataFetcher):
     def __init__(self, folder: Path):
         self.files = list(folder.glob("**/*.csv"))
         logging.info(f"Found {len(self.files)} files")
-        self.data = {}
+        self.data: Dict[Dict[str, DataPoints]] = {}
         self.read_all_files()
 
     def read_all_files(self):
@@ -49,16 +51,27 @@ class CsvFetcher(DataFetcher):
             if room not in self.data:
                 self.data[room] = {}
 
-            with open(file, "r") as f:
-                reader = csv.reader(f)
-                data = [row for row in reader if row]  # remove empty rows
-            datapoints = DataPoints(
-                [float(row[0]) for row in data], [float(row[1]) for row in data]
+            df = pd.read_csv(file, names=["time", "data"])
+            data = df.loc[df["data"] > 0]
+            self.data[room][file.name.replace(".csv", "")] = DataPoints(
+                data["time"], data["data"]
             )
-            self.data[room][file.name.replace(".csv", "")] = datapoints
 
         end = time_ns()
         logging.info(f"Took {(end-start)/1e9} s to read all files")
+
+    def get_start_date(self):
+        """
+        Returns first date found in files
+        :return:
+        """
+        earliest = datetime.datetime.now().timestamp()
+
+        for room in self.data.values():
+            for data_type in room.values():
+                if data_type.timestamps[0] < earliest:
+                    earliest = data_type.timestamps[0]
+        return datetime.datetime.fromtimestamp(earliest)  # todo, handle timezone
 
     def fetch(self, room: str, data_type: str):
         """
@@ -86,8 +99,3 @@ class CsvFetcher(DataFetcher):
             if file.parts[-2] == room:
                 ret_values.append(file.parts[-1].replace(".csv", ""))
         return ret_values
-        return [
-            file.parts[-1].replace(".csv", "")
-            for file in self.files
-            if file.parts[-2] == room
-        ]

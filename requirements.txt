@@ -1,4 +1,5 @@
-paho-mqtt
-pyside6
-pyqtgraph
+paho-mqtt~=2.0.0
+pyside6~=6.2.4
+pyqtgraph~=0.13.3
 pre-commit
+pandas~=2.0.3

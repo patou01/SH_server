@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
         horiz2.addWidget(self.graphWidget2)
 
         from_box = QHBoxLayout()
-        self.from_date = QDateTimeEdit(QDate.currentDate())
+        self.from_date = QDateTimeEdit(self.fetcher.get_start_date())
         self.from_date.setCalendarPopup(True)
         self.from_date.setDisplayFormat("yyyy/M/d")
         self.from_date.dateTimeChanged.connect(self.hours_callback)
