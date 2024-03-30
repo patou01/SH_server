@@ -4,8 +4,16 @@ Provides an interface to fetch the data that can then be used to make plots.
 import csv
 import logging
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from pathlib import Path
 from time import time_ns
+from typing import List
+
+
+@dataclass
+class DataPoints:
+    timestamps: List[float]
+    points: List[float]
 
 
 class DataFetcher(ABC):
@@ -17,31 +25,55 @@ class DataFetcher(ABC):
 
 
 class CsvFetcher(DataFetcher):
+    """
+    Fetch data from csv files. THe files are expected to sit under the folder in the constructor.
+    The files should be of the type "folder/room/data_type.csv".
+    eg "folder/bedroom/temperature.csv"
+    Data inside each csv is expected as "timestamp, data" for each row
+    """
+
     def __init__(self, folder: Path):
         self.files = list(folder.glob("**/*.csv"))
         logging.info(f"Found {len(self.files)} files")
+        self.data = {}
+        self.read_all_files()
+
+    def read_all_files(self):
+        """
+        Read content of all files and stores in the data dictionary.
+        :return:
+        """
+        start = time_ns()
+        for file in self.files:
+            room = file.parts[-2]
+            if room not in self.data:
+                self.data[room] = {}
+
+            with open(file, "r") as f:
+                reader = csv.reader(f)
+                data = [row for row in reader if row]  # remove empty rows
+            datapoints = DataPoints(
+                [float(row[0]) for row in data], [float(row[1]) for row in data]
+            )
+            self.data[room][file.name.replace(".csv", "")] = datapoints
+
+        end = time_ns()
+        logging.info(f"Took {(end-start)/1e9} s to read all files")
 
     def fetch(self, room: str, data_type: str):
         """
         Returns the content of the file at "**/room/data_type.csv"
         """
-        for file in self.files:
-            if file.parts[-2] == room:
-                if file.name == f"{data_type}.csv":
-                    logging.info(f"Found {file}")
-                    with open(file, "r") as f:
-                        start = time_ns()
-                        reader = csv.reader(f)
-                        data = [row for row in reader if row]
-                        read = time_ns()
-                    timestamps = [float(row[0]) for row in data]
-                    points = [float(row[1]) for row in data]
-                    convert = time_ns()
-                    logging.info(f"time to read: {(read-start)/1e9}")
-                    logging.info(f"Time to convert: {(convert-read)/1e9}")
-                    return [timestamps, points]
+        logging.info(f"Looking for {room}, {data_type}")
+        if room in self.data:
+            if data_type in self.data[room]:
+                return (
+                    self.data[room][data_type].timestamps,
+                    self.data[room][data_type].points,
+                )
 
-        logging.warning(f"Nothing found for {room} {data_type}")
+        logging.warning(f"Nothing found for {room}, {data_type}")
+        return [], []
 
     def get_available_data_types(self, room: str):
         """
