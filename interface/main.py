@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
         self.current_folder = "bedroom"
 
         axis = DateAxisItem()
-        layout = QVBoxLayout()
+        self.layout = QVBoxLayout()
 
         horiz1 = QHBoxLayout()
 
@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
         folder_button = QPushButton("Select folder")
         folder_button.clicked.connect(self.find_folder)
         widget = QWidget()
-        widget.setLayout(layout)
+        widget.setLayout(self.layout)
         self.box1 = QComboBox()
         self.box1.addItems(types)
         self.box1.currentTextChanged.connect(self.combo1_callback)
@@ -88,14 +88,22 @@ class MainWindow(QMainWindow):
         until_box.addWidget(self.until_date)
         until_box.addWidget(self.until_hour)
 
-        layout.addWidget(folder_button)
-        layout.addLayout(from_box)
-        layout.addLayout(until_box)
-        layout.addLayout(horiz1)
-        layout.addLayout(horiz2)
+        self.layout.addWidget(folder_button)
+        self.layout.addLayout(from_box)
+        self.layout.addLayout(until_box)
+        self.layout.addLayout(horiz1)
+        self.layout.addLayout(horiz2)
 
+        add_plot_layout = QHBoxLayout()
+        add_button = QPushButton("Add plot")
+        add_button.pressed.connect(self.add_button)
+        add_plot_layout.addWidget(add_button)
+        self.layout.addLayout(add_plot_layout)
         self.setCentralWidget(widget)
         self.replot()
+
+    def add_button(self):
+        print("pressed")
 
     def find_folder(self):
         logging.info("Searching!")
