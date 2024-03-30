@@ -116,13 +116,6 @@ class MainWindow(QMainWindow):
         self.box1.blockSignals(True)
         self.box1.setCurrentIndex(0)
 
-        self.box2.blockSignals(True)
-        self.box2.clear()
-        self.box2.addItems(types)
-        self.box2.blockSignals(False)
-        if len(types) > 1:
-            self.box2.setCurrentIndex(1)
-
     def combo1_callback(self, text: str):
         logging.info(f"Got callback for {text} on combo1")
         self.plot(text, 0)
