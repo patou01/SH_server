@@ -6,7 +6,6 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from time import time_ns
 from typing import Dict, List
 
 import pandas as pd
@@ -25,6 +24,20 @@ class DataFetcher(ABC):
         Return eg the temperatures for the bedroom.
         """
 
+    @abstractmethod
+    def get_start_date(self):
+        """
+        Return the first timestamp found
+        :return:
+        """
+
+    @abstractmethod
+    def get_end_date(self):
+        """
+        return the last timestamp found
+        :return:
+        """
+
 
 class CsvFetcher(DataFetcher):
     """
@@ -37,7 +50,7 @@ class CsvFetcher(DataFetcher):
     def __init__(self, folder: Path):
         self.files = list(folder.glob("**/*.csv"))
         logging.info(f"Found {len(self.files)} files")
-        self.data: Dict[Dict[str, DataPoints]] = {}
+        self.data: Dict[str, Dict[str, DataPoints]] = {}
         self.read_all_files()
 
     def read_all_files(self):
@@ -45,7 +58,6 @@ class CsvFetcher(DataFetcher):
         Read content of all files and stores in the data dictionary.
         :return:
         """
-        start = time_ns()
         for file in self.files:
             room = file.parts[-2]
             if room not in self.data:
@@ -54,11 +66,8 @@ class CsvFetcher(DataFetcher):
             df = pd.read_csv(file, names=["time", "data"])
             data = df.loc[df["data"] > 0]
             self.data[room][file.name.replace(".csv", "")] = DataPoints(
-                data["time"], data["data"]
+                data["time"].array, data["data"].array
             )
-
-        end = time_ns()
-        logging.info(f"Took {(end-start)/1e9} s to read all files")
 
     def get_start_date(self):
         """
@@ -72,6 +81,17 @@ class CsvFetcher(DataFetcher):
                 if data_type.timestamps[0] < earliest:
                     earliest = data_type.timestamps[0]
         return datetime.datetime.fromtimestamp(earliest)  # todo, handle timezone
+
+    def get_end_date(self):
+        latest = datetime.datetime(
+            2000, 1, 1
+        ).timestamp()  # use a datetime from somewhat long ago
+
+        for room in self.data.values():
+            for data_type in room.values():
+                if data_type.timestamps[-1] > latest:
+                    latest = data_type.timestamps[-1]
+        return datetime.datetime.fromtimestamp(latest)  # todo, handle timezone
 
     def fetch(self, room: str, data_type: str):
         """
