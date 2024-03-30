@@ -35,13 +35,23 @@ class PlotLayout(QHBoxLayout):
         self.start_timestamp = start_timestamp
         self.end_timestamp = end_timestamp
         available_data = self.fetcher.get_available_data_types()
+
+        vert_layout = QVBoxLayout()
         self.box = QComboBox()
         self.box.addItems(available_data)
         self.box.currentTextChanged.connect(self.combo_callback)
         axis = DateAxisItem()
         self.graph = pg.PlotWidget(axisItems={"bottom": axis})
-        self.addWidget(self.box)
+
+        self.delete_button = QPushButton("Delete me")
+        self.delete_button.pressed.connect(self.delete)
+        vert_layout.addWidget(self.box)
+        vert_layout.addWidget(self.delete_button)
+        self.addLayout(vert_layout)
         self.addWidget(self.graph)
+
+    def delete(self):
+        logging.info("Should be deleted!")
 
     def combo_callback(self, text: str):
         """
