@@ -19,22 +19,29 @@ class DataPoints:
 
 class DataFetcher(ABC):
     @abstractmethod
-    def fetch(self, room: str, data_type: str):
+    def fetch(self, data_type: str) -> DataPoints:
         """
-        Return eg the temperatures for the bedroom.
+        Return eg the temperatures for the currently selected room
         """
 
     @abstractmethod
-    def get_start_date(self):
+    def get_start_date(self) -> datetime.datetime:
         """
         Return the first timestamp found
         :return:
         """
 
     @abstractmethod
-    def get_end_date(self):
+    def get_end_date(self) -> datetime.datetime:
         """
         return the last timestamp found
+        :return:
+        """
+
+    @abstractmethod
+    def get_available_data_types(self) -> List[str]:
+        """
+        Return type of measurements that can be used
         :return:
         """
 
@@ -49,9 +56,13 @@ class CsvFetcher(DataFetcher):
 
     def __init__(self, folder: Path):
         self.files = list(folder.glob("**/*.csv"))
+        self.room = None
         logging.info(f"Found {len(self.files)} files")
         self.data: Dict[str, Dict[str, DataPoints]] = {}
         self.read_all_files()
+
+    def set_room(self, room: str):
+        self.room = room
 
     def read_all_files(self):
         """
@@ -93,29 +104,32 @@ class CsvFetcher(DataFetcher):
                     latest = data_type.timestamps[-1]
         return datetime.datetime.fromtimestamp(latest)  # todo, handle timezone
 
-    def fetch(self, room: str, data_type: str):
+    def fetch(self, data_type: str):
         """
         Returns the content of the file at "**/room/data_type.csv"
         """
-        logging.info(f"Looking for {room}, {data_type}")
-        if room in self.data:
-            if data_type in self.data[room]:
+        logging.info(f"Looking for {self.room}, {data_type}")
+        if self.room in self.data:
+            if data_type in self.data[self.room]:
                 return (
-                    self.data[room][data_type].timestamps,
-                    self.data[room][data_type].points,
+                    self.data[self.room][data_type].timestamps,
+                    self.data[self.room][data_type].points,
                 )
 
-        logging.warning(f"Nothing found for {room}, {data_type}")
+        logging.warning(f"Nothing found for {self.room}, {data_type}")
         return [], []
 
-    def get_available_data_types(self, room: str):
+    def get_available_data_types(self, room: str = None):
         """
         Return the different type of measurements that are available for room
         :param room:
         :return:
         """
+        if self.room is None or room is not None:
+            self.room = room
+
         ret_values = []
         for file in self.files:
-            if file.parts[-2] == room:
+            if file.parts[-2] == self.room:
                 ret_values.append(file.parts[-1].replace(".csv", ""))
         return ret_values
