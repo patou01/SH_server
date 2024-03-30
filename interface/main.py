@@ -39,9 +39,6 @@ class MainWindow(QMainWindow):
 
         self.graphWidget = pg.PlotWidget(axisItems={"bottom": axis})
 
-        axis2 = DateAxisItem()
-        self.graphWidget2 = pg.PlotWidget(axisItems={"bottom": axis2})
-
         types = self.fetcher.get_available_data_types(self.current_folder)
 
         folder_button = QPushButton("Select folder")
@@ -143,8 +140,7 @@ class MainWindow(QMainWindow):
         if index == 0:
             target = self.graphWidget
         else:
-            target = self.graphWidget2
-
+            return
         target.plotItem.clear()
         clear_time = []
         clear_dat = []
