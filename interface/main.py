@@ -3,6 +3,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
+from time import time_ns
 
 import pyqtgraph as pg
 from pyqtgraph import DateAxisItem
@@ -147,7 +148,11 @@ class MainWindow(QMainWindow):
         """
         Fetches the data and plots.
         """
+
+        started = time_ns()
+
         timestamps, data = self.fetcher.fetch(self.current_folder, item)
+        fetched = time_ns()
 
         if index == 0:
             target = self.graphWidget
@@ -187,8 +192,13 @@ class MainWindow(QMainWindow):
                     clear_time.append(ts)
                     clear_dat.append(dat)
 
+        cleaned = time_ns()
         if clear_time:
             target.plot(clear_time, clear_dat)
+        done = time_ns()
+        logging.info(f"fetching: {(fetched-started)/1e9}")
+        logging.info(f"cleaning: {(cleaned-fetched)/1e9}")
+        logging.info(f"plotting: {(done-cleaned)/1e9}")
 
 
 app = QApplication(sys.argv)
