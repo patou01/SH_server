@@ -1,16 +1,24 @@
 import logging
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import QDate
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QComboBox, \
-    QPushButton, \
-    QFileDialog, QDateTimeEdit, QLabel
 import pyqtgraph as pg
-import sys
-
 from pyqtgraph import DateAxisItem
+from PySide6.QtCore import QDate
+from PySide6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QDateTimeEdit,
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from interface.data_fetcher import CsvFetcher
 
@@ -29,10 +37,10 @@ class MainWindow(QMainWindow):
 
         horiz1 = QHBoxLayout()
 
-        self.graphWidget = pg.PlotWidget(axisItems={'bottom': axis})
+        self.graphWidget = pg.PlotWidget(axisItems={"bottom": axis})
 
         axis2 = DateAxisItem()
-        self.graphWidget2 = pg.PlotWidget(axisItems={'bottom': axis2})
+        self.graphWidget2 = pg.PlotWidget(axisItems={"bottom": axis2})
 
         types = self.fetcher.get_available_data_types(self.current_folder)
 
@@ -57,7 +65,7 @@ class MainWindow(QMainWindow):
         horiz2.addWidget(self.graphWidget2)
 
         from_box = QHBoxLayout()
-        self.from_date = QDateTimeEdit(QDate.currentDate())
+        self.from_date = QDateTimeEdit(self.fetcher.get_start_date())
         self.from_date.setCalendarPopup(True)
         self.from_date.setDisplayFormat("yyyy/M/d")
         self.from_date.dateTimeChanged.connect(self.hours_callback)
@@ -69,7 +77,7 @@ class MainWindow(QMainWindow):
         from_box.addWidget(self.from_hour)
 
         until_box = QHBoxLayout()
-        self.until_date = QDateTimeEdit(QDate.currentDate())
+        self.until_date = QDateTimeEdit(self.fetcher.get_end_date())
         self.until_date.setCalendarPopup(True)
         self.until_date.setDisplayFormat("yyyy/M/d")
         self.until_date.dateTimeChanged.connect(self.hours_callback)
@@ -139,6 +147,7 @@ class MainWindow(QMainWindow):
         """
         Fetches the data and plots.
         """
+
         timestamps, data = self.fetcher.fetch(self.current_folder, item)
 
         if index == 0:
@@ -153,12 +162,24 @@ class MainWindow(QMainWindow):
         # todo fix timezones stuff, it's ugly.
         from_date = self.from_date.dateTime().toPython()
         from_hour = self.from_hour.dateTime().toPython()
-        start = datetime(from_date.year, from_date.month, from_date.day, from_hour.hour, from_hour.minute)
+        start = datetime(
+            from_date.year,
+            from_date.month,
+            from_date.day,
+            from_hour.hour,
+            from_hour.minute,
+        )
         start_ts = start.timestamp()
 
         until_date = self.until_date.dateTime().toPython()
         until_hour = self.until_hour.dateTime().toPython()
-        end = datetime(until_date.year, until_date.month, until_date.day, until_hour.hour, until_hour.minute)
+        end = datetime(
+            until_date.year,
+            until_date.month,
+            until_date.day,
+            until_hour.hour,
+            until_hour.minute,
+        )
         end_ts = end.timestamp()
 
         for ts, dat in zip(timestamps, data):
