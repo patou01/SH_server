@@ -1,3 +1,4 @@
 paho-mqtt
 pyside6
 pyqtgraph
+pre-commit
