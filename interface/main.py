@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QDate
+from PySide6.QtGui import Qt
 from PySide6.QtWidgets import (
     QApplication,
     QDateTimeEdit,
@@ -13,6 +14,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QPushButton,
+    QSlider,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -71,7 +73,27 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(widget, "Main")
 
     def _init_map_page(self):
-        self.tabs.addTab(MapWidget(), "Heatmap")
+        widget = QWidget()
+        layout = QVBoxLayout()
+        date_layout = QHBoxLayout()
+        date_layout.addWidget(QLabel("Select date"))
+        slider = QSlider(Qt.Horizontal)
+        slider.setMinimum(self.fetcher.get_start_date().timestamp())
+        slider.setMaximum(self.fetcher.get_end_date().timestamp())
+        self.time_slider = slider
+        self.time_slider.valueChanged.connect(self.time_slider_cb)
+        self.date_label = QLabel("N/A")
+        self.time_slider_cb()
+        date_layout.addWidget(slider)
+        date_layout.addWidget(self.date_label)
+        layout.addLayout(date_layout)
+        layout.addWidget(MapWidget())
+        widget.setLayout(layout)
+        self.tabs.addTab(widget, "Heatmap")
+
+    def time_slider_cb(self):
+        self.slider_date = datetime.fromtimestamp(self.time_slider.value())
+        self.date_label.setText(self.slider_date.strftime("%Y-%m-%d  %H:%M"))
 
     def _init_from_boxes(self):
         """
@@ -89,6 +111,7 @@ class MainWindow(QMainWindow):
         from_box.addWidget(QLabel("From"))
         from_box.addWidget(self.from_date)
         from_box.addWidget(self.from_hour)
+
         return from_box
 
     def _init_end_boxes(self):
