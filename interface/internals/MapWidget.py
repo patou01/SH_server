@@ -7,6 +7,8 @@ from typing import List
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
 
+from interface.internals.geometry import house
+
 
 class MapWidget(pg.GraphicsLayoutWidget):
     def __init__(self, *args, **kwargs):
@@ -28,6 +30,7 @@ class MapWidget(pg.GraphicsLayoutWidget):
         Kinda yikes to do it this way, but at least it gets out of the way.
         :return:
         """
+        return house.as_points()
         return [  # bedroom
             [0, 0],
             [3, 0],
