@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QPushButton,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -124,7 +125,12 @@ class MainWindow(QMainWindow):
         self.fetcher = CsvFetcher(Path("../server/data"))
         self.fetcher.set_room("bedroom")
         self.current_folder = "bedroom"
+        self.tabs = QTabWidget()
+        self._init_main_page()
+        self._init_map_page()
+        self.setCentralWidget(self.tabs)
 
+    def _init_main_page(self):
         self.layout = QVBoxLayout()
         self.start_timestamp = 0
         self.end_timestamp = 2000000000
@@ -156,7 +162,15 @@ class MainWindow(QMainWindow):
         add_button.pressed.connect(self.add_button)
         add_plot_layout.addWidget(add_button)
         self.layout.addLayout(add_plot_layout)
-        self.setCentralWidget(widget)
+        self.tabs.addTab(widget, "Main")
+
+    def _init_map_page(self):
+        layout = QVBoxLayout()
+
+        widget = QWidget()
+        widget.setLayout(layout)
+        layout.addWidget(QLabel("hello world"))
+        self.tabs.addTab(widget, "Heatmap")
 
     def _init_from_boxes(self):
         """
