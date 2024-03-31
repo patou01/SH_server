@@ -18,9 +18,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from interface.data_fetcher import CsvFetcher
-from interface.MapWidget import MapWidget
-from interface.PlotLayout import PlotLayout
+from interface.internals.data_fetcher import CsvFetcher
+from interface.internals.MapWidget import MapWidget
+from interface.internals.PlotLayout import PlotLayout
 
 logging.basicConfig(level=logging.INFO)
 

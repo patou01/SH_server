@@ -7,7 +7,7 @@ import pyqtgraph as pg
 from pyqtgraph import DateAxisItem
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QPushButton, QVBoxLayout
 
-from interface.data_fetcher import DataFetcher
+from interface.internals.data_fetcher import DataFetcher
 
 
 class PlotLayout(QHBoxLayout):
