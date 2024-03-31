@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO)
 
 class MainWindow(QMainWindow):
     def __init__(self):
-        super(MainWindow, self).__init__()
+        super().__init__()
         self.fetcher = CsvFetcher(Path("../server/data"))
         self.fetcher.set_room("bedroom")
         self.current_folder = "bedroom"
