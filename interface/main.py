@@ -28,12 +28,20 @@ logging.basicConfig(level=logging.INFO)
 
 class PlotLayout(QHBoxLayout):
     def __init__(
-        self, fetcher: DataFetcher, start_timestamp: float, end_timestamp: float
+        self,
+        fetcher: DataFetcher,
+        start_timestamp: float,
+        end_timestamp: float,
+        delete_callback,
+        plot_id: int,
     ):
         super().__init__()
         self.fetcher = fetcher
         self.start_timestamp = start_timestamp
         self.end_timestamp = end_timestamp
+        self.delete_callback = delete_callback
+        self.id = plot_id
+
         available_data = self.fetcher.get_available_data_types()
 
         vert_layout = QVBoxLayout()
@@ -51,7 +59,10 @@ class PlotLayout(QHBoxLayout):
         self.addWidget(self.graph)
 
     def delete(self):
-        logging.info("Should be deleted!")
+        self.delete_button.deleteLater()
+        self.box.deleteLater()
+        self.deleteLater()
+        self.delete_callback(self.id)
 
     def combo_callback(self, text: str):
         """
@@ -127,7 +138,13 @@ class MainWindow(QMainWindow):
         self.layout.addLayout(from_box)
         self.layout.addLayout(until_box)
         self.plots = [
-            PlotLayout(self.fetcher, self.start_timestamp, self.end_timestamp)
+            PlotLayout(
+                self.fetcher,
+                self.start_timestamp,
+                self.end_timestamp,
+                self.delete_plot,
+                0,
+            )
         ]
         self.layout.addLayout(self.plots[0])
 
@@ -201,7 +218,14 @@ class MainWindow(QMainWindow):
             plot.set_end(self.end_timestamp)
 
     def add_button(self):
-        layout = PlotLayout(self.fetcher, self.start_timestamp, self.end_timestamp)
+        layout = PlotLayout(
+            self.fetcher,
+            self.start_timestamp,
+            self.end_timestamp,
+            self.delete_plot,
+            len(self.plots),
+        )
+        self.plots.append(layout)
         self.layout.insertLayout(self.layout.count() - 1, layout)
 
     def find_folder(self):
@@ -221,6 +245,18 @@ class MainWindow(QMainWindow):
         logging.info(f"Updated combo texts to {types}")
         for plot in self.plots:
             plot.update_combo_texts(types)
+
+    def delete_plot(self, which: int):
+        """
+        Delete the plot layout with id which and remove it from the list of plots.
+        Note: This function is called after the delete of the layout itself
+        :param which:
+        :return:
+        """
+        self.layout.removeItem(self.plots[which])
+        for n, plot in enumerate(self.plots):
+            if plot.id == which:
+                self.plots.pop(n)
 
 
 app = QApplication(sys.argv)
