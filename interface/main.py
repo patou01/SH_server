@@ -59,6 +59,7 @@ class PlotLayout(QHBoxLayout):
             vert_layout.addWidget(self.delete_button)
         self.addLayout(vert_layout)
         self.addWidget(self.graph)
+        self.plot()
 
     def delete(self):
         self.delete_button.deleteLater()
