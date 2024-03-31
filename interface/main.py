@@ -51,10 +51,12 @@ class PlotLayout(QHBoxLayout):
         axis = DateAxisItem()
         self.graph = pg.PlotWidget(axisItems={"bottom": axis})
 
-        self.delete_button = QPushButton("Delete me")
-        self.delete_button.pressed.connect(self.delete)
         vert_layout.addWidget(self.box)
-        vert_layout.addWidget(self.delete_button)
+
+        if self.id > 0:
+            self.delete_button = QPushButton("Delete me")
+            self.delete_button.pressed.connect(self.delete)
+            vert_layout.addWidget(self.delete_button)
         self.addLayout(vert_layout)
         self.addWidget(self.graph)
 
