@@ -24,6 +24,10 @@ class MapWidget(pg.GraphicsLayoutWidget):
 
     @property
     def wall_points(self) -> List[List[float]]:
+        """
+        Kinda yikes to do it this way, but at least it gets out of the way.
+        :return:
+        """
         return [  # bedroom
             [0, 0],
             [3, 0],
