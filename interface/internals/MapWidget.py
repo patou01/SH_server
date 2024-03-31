@@ -2,12 +2,43 @@
 Responsible for the attempt to display a map of the sensor data.
 TBD how to make that nicely, for now we'll hard code coordinates
 """
+from datetime import datetime
 from typing import List
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QSlider, QVBoxLayout, QWidget
 
+from interface.internals.data_fetcher import DataFetcher
 from interface.internals.geometry import house
+
+
+class TempWidget(QWidget):
+    def __init__(self, fetcher: DataFetcher):
+        super().__init__()
+        self.fetcher = fetcher
+        layout = QVBoxLayout()
+        date_layout = QHBoxLayout()
+        date_layout.addWidget(QLabel("Select date"))
+        slider = QSlider(Qt.Horizontal)
+        slider.setMinimum(self.fetcher.get_start_date().timestamp())
+        slider.setMaximum(self.fetcher.get_end_date().timestamp())
+        self.time_slider = slider
+        self.time_slider.valueChanged.connect(self.time_slider_cb)
+        self.date_label = QLabel("N/A")
+        self.time_slider_cb()
+        self.slider_date = None
+        date_layout.addWidget(slider)
+        date_layout.addWidget(self.date_label)
+        layout.addLayout(date_layout)
+        layout.addWidget(MapWidget())
+        self.layout = layout
+        self.setLayout(layout)
+
+    def time_slider_cb(self):
+        self.slider_date = datetime.fromtimestamp(self.time_slider.value())
+        self.date_label.setText(self.slider_date.strftime("%Y-%m-%d  %H:%M"))
 
 
 class MapWidget(pg.GraphicsLayoutWidget):
@@ -31,35 +62,3 @@ class MapWidget(pg.GraphicsLayoutWidget):
         :return:
         """
         return house.as_points()
-        return [  # bedroom
-            [0, 0],
-            [3, 0],
-            [3, -3],
-            [2.75, -3],
-            [3, -3],
-            # corridor
-            [3, -5],
-            # living room
-            [3, -2.5],
-            [6, -2.5],
-            [6, -6],
-            [3, -6],
-            [3, -5.5],
-            [3, -7.5],
-            [2, -7.5],
-            [2, -7],
-            [2, -7.5],
-            [0, -7.5],
-            [0, -6],
-            [2, -6],
-            [2, -6.5],
-            [2, -4.5],
-            [2, -5],
-            [0, -5],
-            [0, -3],
-            [2, -3],
-            [2, -3.5],
-            [2, -3],
-            [2.25, -3],
-            [0, -3],
-        ]

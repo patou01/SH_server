@@ -5,7 +5,6 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QDate
-from PySide6.QtGui import Qt
 from PySide6.QtWidgets import (
     QApplication,
     QDateTimeEdit,
@@ -14,14 +13,13 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QPushButton,
-    QSlider,
     QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
 from interface.internals.data_fetcher import CsvFetcher
-from interface.internals.MapWidget import MapWidget
+from interface.internals.MapWidget import TempWidget
 from interface.internals.PlotLayout import PlotLayout
 
 logging.basicConfig(level=logging.INFO)
@@ -73,27 +71,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(widget, "Main")
 
     def _init_map_page(self):
-        widget = QWidget()
-        layout = QVBoxLayout()
-        date_layout = QHBoxLayout()
-        date_layout.addWidget(QLabel("Select date"))
-        slider = QSlider(Qt.Horizontal)
-        slider.setMinimum(self.fetcher.get_start_date().timestamp())
-        slider.setMaximum(self.fetcher.get_end_date().timestamp())
-        self.time_slider = slider
-        self.time_slider.valueChanged.connect(self.time_slider_cb)
-        self.date_label = QLabel("N/A")
-        self.time_slider_cb()
-        date_layout.addWidget(slider)
-        date_layout.addWidget(self.date_label)
-        layout.addLayout(date_layout)
-        layout.addWidget(MapWidget())
-        widget.setLayout(layout)
-        self.tabs.addTab(widget, "Heatmap")
-
-    def time_slider_cb(self):
-        self.slider_date = datetime.fromtimestamp(self.time_slider.value())
-        self.date_label.setText(self.slider_date.strftime("%Y-%m-%d  %H:%M"))
+        self.tabs.addTab(TempWidget(self.fetcher), "Heatmap")
 
     def _init_from_boxes(self):
         """
