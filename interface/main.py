@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from interface.internals.data_fetcher import CsvFetcher
-from interface.internals.MapWidget import MapWidget
+from interface.internals.MapWidget import TempWidget
 from interface.internals.PlotLayout import PlotLayout
 
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO)
 
 class MainWindow(QMainWindow):
     def __init__(self):
-        super(MainWindow, self).__init__()
+        super().__init__()
         self.fetcher = CsvFetcher(Path("../server/data"))
         self.fetcher.set_room("bedroom")
         self.current_folder = "bedroom"
@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(widget, "Main")
 
     def _init_map_page(self):
-        self.tabs.addTab(MapWidget(), "Heatmap")
+        self.tabs.addTab(TempWidget(self.fetcher), "Heatmap")
 
     def _init_from_boxes(self):
         """
@@ -89,6 +89,7 @@ class MainWindow(QMainWindow):
         from_box.addWidget(QLabel("From"))
         from_box.addWidget(self.from_date)
         from_box.addWidget(self.from_hour)
+
         return from_box
 
     def _init_end_boxes(self):
