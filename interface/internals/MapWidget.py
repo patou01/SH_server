@@ -32,7 +32,7 @@ class TempWidget(QWidget):
         date_layout.addWidget(slider)
         date_layout.addWidget(self.date_label)
         layout.addLayout(date_layout)
-        layout.addWidget(MapWidget())
+        layout.addWidget(Map())
         self.layout = layout
         self.setLayout(layout)
 
@@ -41,7 +41,7 @@ class TempWidget(QWidget):
         self.date_label.setText(self.slider_date.strftime("%Y-%m-%d  %H:%M"))
 
 
-class MapWidget(pg.GraphicsLayoutWidget):
+class Map(pg.GraphicsLayoutWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         plt = self.addPlot(title="Plot")
