@@ -7,7 +7,14 @@ from typing import List
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPainter, QPixmap
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QSlider, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QSlider,
+    QVBoxLayout,
+    QWidget,
+)
 
 from interface.internals.data_fetcher import DataFetcher
 from interface.internals.geometry import house
@@ -30,10 +37,17 @@ class TempWidget(QWidget):
         self.slider_date = None
         date_layout.addWidget(slider)
         date_layout.addWidget(self.date_label)
+        self.box = QComboBox()
+        self.box.addItems(self.fetcher.get_available_data_types())
+        self.box.currentTextChanged.connect(self.combo_callback)
         layout.addLayout(date_layout)
+        layout.addWidget(self.box)
         layout.addWidget(Map())
         self.layout = layout
         self.setLayout(layout)
+
+    def combo_callback(self, text: str):
+        pass
 
     def time_slider_cb(self):
         self.slider_date = datetime.fromtimestamp(self.time_slider.value())
