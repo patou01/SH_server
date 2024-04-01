@@ -26,9 +26,11 @@ class WallSequence:
         for wall in self.walls:
             last_point = points[-1]
             rad = 2 * math.pi * wall.orientation / 360
+            scale = 50
+            length = scale * wall.length
             next_point = [
-                last_point[0] + wall.length * math.cos(rad),
-                last_point[1] - wall.length * math.sin(rad),
+                last_point[0] + length * math.cos(rad),
+                last_point[1] + length * math.sin(rad),
             ]
             points.append(next_point)
 

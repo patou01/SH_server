@@ -5,9 +5,8 @@ TBD how to make that nicely, for now we'll hard code coordinates
 from datetime import datetime
 from typing import List
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPainter, QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QSlider, QVBoxLayout, QWidget
 
 from interface.internals.data_fetcher import DataFetcher
@@ -41,19 +40,39 @@ class TempWidget(QWidget):
         self.date_label.setText(self.slider_date.strftime("%Y-%m-%d  %H:%M"))
 
 
-class Map(pg.GraphicsLayoutWidget):
+class Map(QLabel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        plt = self.addPlot(title="Plot")
+        canvas = QPixmap(self.size())
+        canvas.fill(Qt.white)
+        self.setPixmap(canvas)
+        self.draw_something()
 
-        polyline = pg.PolyLineROI(
-            self.wall_points, closed=True, maxBounds=QtCore.QRectF(0, 0, 30, 30)
+    def draw_something(self):
+        canvas = self.pixmap()
+        painter = QPainter(canvas)
+        x_offset = 50
+        y_offset = 50
+        for n, point in enumerate(self.wall_points):
+            if n < len(self.wall_points) - 1:
+                start = [int(point[0]) + x_offset, int(point[1]) + y_offset]
+                end = [
+                    int(self.wall_points[n + 1][0]) + x_offset,
+                    int(self.wall_points[n + 1][1]) + y_offset,
+                ]
+                painter.drawLine(*start, *end)
+
+        # close it
+        end = self.wall_points[0]
+        start = self.wall_points[-1]
+        painter.drawLine(
+            int(start[0]) + x_offset,
+            int(start[1]) + y_offset,
+            int(end[0]) + x_offset,
+            int(end[1]) + y_offset,
         )
-
-        plt.addItem(polyline)
-
-        plt.disableAutoRange("xy")
-        plt.autoRange()
+        painter.end()
+        self.setPixmap(canvas)
 
     @property
     def wall_points(self) -> List[List[float]]:
